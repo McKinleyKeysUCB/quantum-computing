@@ -40,15 +40,6 @@ def ket1' : Qubit := fun i _ => if i = 1 then 1 else 0
 notation "|0⟩" => ket0'
 notation "|1⟩" => ket1'
 
-lemma norm_ket0_eq_1 :
-  | |0⟩ | = 1
-  := by
-    simp [norm, ket0', Qubit.α, Qubit.β]
-lemma norm_ket1_eq_1 :
-  | |1⟩ | = 1
-  := by
-    simp [norm, ket1', Qubit.α, Qubit.β]
-
 noncomputable
 def ket00 : Qubits 2 := ![
   ![1],
