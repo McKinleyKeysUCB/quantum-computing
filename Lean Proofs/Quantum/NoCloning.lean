@@ -52,13 +52,11 @@ theorem no_cloning :
           ket1_tens_ket1_eq_ket11,
         ]
         apply Matrix.ext
-        intro i j
-        rw [Matrix.add_apply]
-        dsimp
-        unfold ket00' ket11'
-        simp
-        
-        sorry
+        apply bash4
+        all_goals rw [Matrix.add_apply]
+        all_goals unfold ket00' ket11'
+        all_goals unfold_let second_expansion
+        all_goals simp
     have first_eq_second (φ : Qubit) (hφ : |φ| = 1) :
       first_expansion φ = second_expansion φ
       := calc
@@ -66,18 +64,18 @@ theorem no_cloning :
         _ = second_expansion φ    := (eq_second_expansion φ)
     specialize first_eq_second |+⟩
     specialize first_eq_second norm_ket_plus_eq_1
-    dsimp at first_eq_second
+    unfold_let first_expansion second_expansion at first_eq_second
     apply Matrix.ext_iff.mpr at first_eq_second
     specialize first_eq_second 1 0
     simp at first_eq_second
     unfold ket_plus' at first_eq_second
     rw [Qubit.α, Qubit.β] at first_eq_second
     rcases first_eq_second with left | right
-    · rw [@div_eq_zero_iff] at left
+    · rw [div_eq_zero_iff] at left
       rcases left with left | right
       · norm_num at left
       · norm_num at right
-    · rw [@div_eq_zero_iff] at right
+    · rw [div_eq_zero_iff] at right
       rcases right with left | right
       · norm_num at left
       · norm_num at right

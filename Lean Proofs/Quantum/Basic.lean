@@ -65,22 +65,17 @@ lemma qubit_tens_qubit (a b : Qubit) :
     simp [i3, hj]
     congr
 
--- lemma blahNat : ¬(5 : ℕ) = (3 : ℕ)
---   := by
---     simp only [Nat.succ.injEq, OfNat.ofNat_ne_one, not_false_eq_true]
---     sorry
--- lemma blah : ¬(1 : Fin 4) = (3 : Fin 4)
---   := by
---     rw [Fin.ext_iff]
---     simp only [Nat.succ.injEq, OfNat.ofNat_ne_one, not_false_eq_true]
---     sorry
-
 lemma temp (i : Fin 4) (hi0 : i ≠ 0) (hi1 : i ≠ 1) (hi2 : i ≠ 2) :
   i = 3
   := by
     rw [Fin.ext_iff]
     rw [Ne, Fin.ext_iff] at *
     
+    sorry
+
+lemma bash4 {P : Fin 4 → Fin 1 → Prop} (hP0 : P 0 0) (hP1 : P 1 0) (hP2 : P 2 0) (hP3 : P 3 0) :
+  ∀ (i : Fin 4) (j : Fin 1), P i j
+  := by
     sorry
 
 lemma ket0_tens_ket0_eq_ket00 :
@@ -105,22 +100,6 @@ lemma ket1_tens_ket1_eq_ket11 :
     · simp [*]
     have hi3 : i = 3 := temp i hi0 hi1 hi2
     simp [*]
-
--- lemma ket0_tens_ket0_eq_ket00 :
---   Tens ket0' ket0' = ket00'
---   := by
---     rw [← Matrix.ext_iff]
---     intro i j
---     dsimp only [Tens]
---     dsimp only [ket0', ket00']
---     simp
---     by_cases hi : i = 0
---     · rw [if_pos hi]
---       by_cases hi' : Fin.modNat i = 0
---       · rw [if_pos hi']
---         
---       sorry
---     sorry
 
 lemma tens_add {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix m₁ n₁} {C : QMatrix m₂ n₂} :
   C ⊗ (A + B) = C ⊗ A + C ⊗ B
@@ -180,28 +159,6 @@ lemma decompose_qubit_into_Z_basis (φ : Qubit) :
       ]
       simp
       congr
-
--- theorem no_cloning_foundation (U : QMatrix 4 4) (φ : Qubit) (h : U * (φ ⊗ |0⟩) = φ ⊗ φ) :
---   φ = |0⟩ ∨ φ = |1⟩
---   := by
---     let α := φ 0 0
---     let β := φ 1 0
---     have :
---       U * (φ ⊗ |0⟩) = Matrix.of (fun i _ =>
---         if i = 0 then
---           α^2
---         else if i = 1 then
---           α * β
---         else if i = 2 then
---           α * β
---         else
---           β^2
---       )
---       := by
---         
---         sorry
---     
---     sorry
 
 lemma tens_self (φ : Qubit) :
   let α := φ 0 0
