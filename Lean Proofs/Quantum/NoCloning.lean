@@ -20,7 +20,7 @@ theorem no_cloning :
           φ.β^2
       )
     let second_expansion (φ : Qubit) : Qubits 2 :=
-      Matrix.of (fun i j =>
+      Matrix.of (fun i _ =>
         if i = 0 then
           φ.α
         else if i = 1 then
@@ -54,7 +54,7 @@ theorem no_cloning :
         apply Matrix.ext
         apply bash4
         all_goals rw [Matrix.add_apply]
-        all_goals unfold ket00' ket11'
+        all_goals unfold ket00 ket11
         all_goals unfold_let second_expansion
         all_goals simp
     have first_eq_second (φ : Qubit) (hφ : |φ| = 1) :
@@ -68,7 +68,7 @@ theorem no_cloning :
     apply Matrix.ext_iff.mpr at first_eq_second
     specialize first_eq_second 1 0
     simp at first_eq_second
-    unfold ket_plus' at first_eq_second
+    unfold ket_plus at first_eq_second
     rw [Qubit.α, Qubit.β] at first_eq_second
     rcases first_eq_second with left | right
     · rw [div_eq_zero_iff] at left

@@ -16,69 +16,48 @@ def Qubit.α (φ : Qubit) := φ 0 0
 def Qubit.β (φ : Qubit) := φ 1 0
 
 noncomputable
-def norm (φ : Qubit)
-  := (Complex.normSq φ.α + Complex.normSq φ.β).sqrt
+def norm (φ : Qubit) :=
+  (Complex.normSq φ.α + Complex.normSq φ.β).sqrt
 
 notation:70 "|" φ "|" => norm φ
 
 noncomputable
-def ket0 : Qubit := ![
-  ![1],
-  ![0]
-]
+def ket0 : Qubit :=
+  fun i _ => if i = 0 then 1 else 0
+  
 noncomputable
-def ket0' : Qubit := fun i _ => if i = 0 then 1 else 0
+def ket1 : Qubit :=
+  fun i _ => if i = 1 then 1 else 0
 
 noncomputable
-def ket1 : Qubit := ![
-  ![0],
-  ![1]
-]
-noncomputable
-def ket1' : Qubit := fun i _ => if i = 1 then 1 else 0
-
-notation "|0⟩" => ket0'
-notation "|1⟩" => ket1'
+def ket_plus : Qubit :=
+  fun _ _ => 1 / Real.sqrt 2
 
 noncomputable
-def ket00 : Qubits 2 := ![
-  ![1],
-  ![0],
-  ![0],
-  ![0]
-]
-noncomputable
-def ket00' : Qubits 2 := fun i _ => if i = 0 then 1 else 0
-noncomputable
-def ket01' : Qubits 2 := fun i _ => if i = 1 then 1 else 0
-noncomputable
-def ket10' : Qubits 2 := fun i _ => if i = 2 then 1 else 0
-noncomputable
-def ket11' : Qubits 2 := fun i _ => if i = 3 then 1 else 0
-
-notation "|00⟩" => ket00'
-notation "|01⟩" => ket01'
-notation "|10⟩" => ket10'
-notation "|11⟩" => ket11'
+def ket_minus : Qubit :=
+  fun i _ => if i = 0 then 1 / Real.sqrt 2 else -1 / Real.sqrt 2
 
 noncomputable
-def ket_plus := ![
-  ![1 / Real.sqrt 2],
-  ![1 / Real.sqrt 2]
-]
+def ket00 : Qubits 2 :=
+  fun i _ => if i = 0 then 1 else 0
 noncomputable
-def ket_minus := ![
-  ![1 / Real.sqrt 2],
-  ![-1 / Real.sqrt 2]
-]
+def ket01 : Qubits 2 :=
+  fun i _ => if i = 1 then 1 else 0
+noncomputable
+def ket10 : Qubits 2 :=
+  fun i _ => if i = 2 then 1 else 0
+noncomputable
+def ket11 : Qubits 2 :=
+  fun i _ => if i = 3 then 1 else 0
 
-noncomputable
-def ket_plus' : Qubit := fun _ _ => 1 / Real.sqrt 2
-noncomputable
-def ket_minus' : Qubit := fun i _ => if i = 0 then 1 / Real.sqrt 2 else -1 / Real.sqrt 2
-
-notation "|+⟩" => ket_plus'
-notation "|-⟩" => ket_minus'
+notation "|0⟩" => ket0
+notation "|1⟩" => ket1
+notation "|00⟩" => ket00
+notation "|01⟩" => ket01
+notation "|10⟩" => ket10
+notation "|11⟩" => ket11
+notation "|+⟩" => ket_plus
+notation "|-⟩" => ket_minus
 
 def X := ![
   ![0, 1],
@@ -94,7 +73,7 @@ def H := ![
   ![1 / Real.sqrt 2, -1 / Real.sqrt 2]
 ]
 
-def Tens {m₁ n₁ m₂ n₂ : ℕ} (A : QMatrix m₁ n₁) (B : QMatrix m₂ n₂) :
+def tens {m₁ n₁ m₂ n₂ : ℕ} (A : QMatrix m₁ n₁) (B : QMatrix m₂ n₂) :
   QMatrix (m₁ * m₂) (n₁ * n₂)
   :=
     Matrix.of (fun (i j) =>
@@ -102,4 +81,4 @@ def Tens {m₁ n₁ m₂ n₂ : ℕ} (A : QMatrix m₁ n₁) (B : QMatrix m₂ n
       B (Fin.modNat i) (Fin.modNat j)
     )
 
-infixl:70 " ⊗ " => Tens
+infixl:70 " ⊗ " => tens

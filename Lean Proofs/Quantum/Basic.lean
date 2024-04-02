@@ -9,16 +9,16 @@ import Quantum.Lemmas
 lemma norm_ket0_eq_1 :
   | |0⟩ | = 1
   := by
-    simp [norm, ket0', Qubit.α, Qubit.β]
+    simp [norm, ket0, Qubit.α, Qubit.β]
 lemma norm_ket1_eq_1 :
   | |1⟩ | = 1
   := by
-    simp [norm, ket1', Qubit.α, Qubit.β]
+    simp [norm, ket1, Qubit.α, Qubit.β]
 
 lemma norm_ket_plus_eq_1 :
   | |+⟩ | = 1
   := by
-    simp [norm, ket_plus', Qubit.α, Qubit.β]
+    simp [norm, ket_plus, Qubit.α, Qubit.β]
     sorry
 
 lemma qubit_tens_qubit (a b : Qubit) :
@@ -33,7 +33,7 @@ lemma qubit_tens_qubit (a b : Qubit) :
       (a 1 0) * (b 1 0)
   )
   := by
-    dsimp only [Tens]
+    dsimp only [tens]
     simp
     apply funext₂
     intro i j
@@ -83,14 +83,14 @@ lemma ket0_tens_ket0_eq_ket00 :
   := by
     rw [qubit_tens_qubit, ← Matrix.ext_iff]
     intro i j
-    unfold ket0' ket00'
+    unfold ket0 ket00
     simp
 lemma ket1_tens_ket1_eq_ket11 :
   |1⟩ ⊗ |1⟩ = |11⟩
   := by
     rw [qubit_tens_qubit, ← Matrix.ext_iff]
     intro i j
-    unfold ket1' ket11'
+    unfold ket1 ket11
     simp
     by_cases hi0 : i = 0
     · simp [*]
@@ -106,7 +106,7 @@ lemma tens_add {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix 
   := by
     apply Matrix.ext
     intro i j
-    rw [Matrix.add_apply, Tens, Tens, Tens]
+    rw [Matrix.add_apply, tens, tens, tens]
     simp
     rw [mul_add]
 lemma add_tens {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix m₁ n₁} {C : QMatrix m₂ n₂} :
@@ -114,21 +114,21 @@ lemma add_tens {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix 
   := by
     apply Matrix.ext
     intro i j
-    rw [Matrix.add_apply, Tens, Tens, Tens]
+    rw [Matrix.add_apply, tens, tens, tens]
     simp
     rw [add_mul]
 
 lemma mul_tens {m₁ n₁ m₂ n₂ : ℕ} {s : ℂ} {A : QMatrix m₁ n₁} {B : QMatrix m₂ n₂} :
   (s • A) ⊗ B = s • (A ⊗ B)
   := by
-    simp [Tens, Pi.smul_def]
+    simp [tens, Pi.smul_def]
     apply funext₂
     intro i j
     ring
 lemma tens_mul {m₁ n₁ m₂ n₂ : ℕ} {s : ℂ} {A : QMatrix m₁ n₁} {B : QMatrix m₂ n₂} :
   A ⊗ (s • B) = s • (A ⊗ B)
   := by
-    simp [Tens, Pi.smul_def]
+    simp [tens, Pi.smul_def]
     apply funext₂
     intro i j
     ring
@@ -142,7 +142,7 @@ lemma decompose_qubit_into_Z_basis (φ : Qubit) :
     rw [Matrix.smul_apply, Matrix.smul_apply]
     have hj : j = 0 := by
       apply Fin.eq_zero
-    rw [hj, ket0', ket1']
+    rw [hj, ket0, ket1]
     by_cases hi : i = 0
     · rw [
         hi,
