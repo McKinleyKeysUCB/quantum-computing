@@ -10,6 +10,7 @@ lemma norm_ket0_eq_1 :
   | |0⟩ | = 1
   := by
     simp [norm, ket0, Qubit.α, Qubit.β]
+
 lemma norm_ket1_eq_1 :
   | |1⟩ | = 1
   := by
@@ -19,7 +20,7 @@ lemma norm_ket_plus_eq_1 :
   | |+⟩ | = 1
   := by
     simp [norm, ket_plus, Qubit.α, Qubit.β]
-    sorry
+    rw [inv_eq_one_div, add_halves]
 
 lemma qubit_tens_qubit (a b : Qubit) :
   a ⊗ b = Matrix.of (fun i _ =>
@@ -65,19 +66,6 @@ lemma qubit_tens_qubit (a b : Qubit) :
     simp [i3, hj]
     congr
 
-lemma temp (i : Fin 4) (hi0 : i ≠ 0) (hi1 : i ≠ 1) (hi2 : i ≠ 2) :
-  i = 3
-  := by
-    rw [Fin.ext_iff]
-    rw [Ne, Fin.ext_iff] at *
-    
-    sorry
-
-lemma bash4 {P : Fin 4 → Fin 1 → Prop} (hP0 : P 0 0) (hP1 : P 1 0) (hP2 : P 2 0) (hP3 : P 3 0) :
-  ∀ (i : Fin 4) (j : Fin 1), P i j
-  := by
-    sorry
-
 lemma ket0_tens_ket0_eq_ket00 :
   |0⟩ ⊗ |0⟩ = |00⟩
   := by
@@ -89,17 +77,9 @@ lemma ket1_tens_ket1_eq_ket11 :
   |1⟩ ⊗ |1⟩ = |11⟩
   := by
     rw [qubit_tens_qubit, ← Matrix.ext_iff]
-    intro i j
     unfold ket1 ket11
-    simp
-    by_cases hi0 : i = 0
-    · simp [*]
-    by_cases hi1 : i = 1
-    · simp [*]
-    by_cases hi2 : i = 2
-    · simp [*]
-    have hi3 : i = 3 := temp i hi0 hi1 hi2
-    simp [*]
+    simp only [Fin.isValue, zero_ne_one, ↓reduceIte, mul_zero, mul_one, Matrix.of_apply]
+    apply Fin.bash4 <;> simp [*]
 
 lemma tens_add {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix m₁ n₁} {C : QMatrix m₂ n₂} :
   C ⊗ (A + B) = C ⊗ A + C ⊗ B

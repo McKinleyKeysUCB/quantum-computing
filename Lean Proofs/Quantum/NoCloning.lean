@@ -52,11 +52,12 @@ theorem no_cloning :
           ket1_tens_ket1_eq_ket11,
         ]
         apply Matrix.ext
-        apply bash4
-        all_goals rw [Matrix.add_apply]
-        all_goals unfold ket00 ket11
-        all_goals unfold_let second_expansion
-        all_goals simp
+        apply Fin.bash4 <;> {
+          rw [Matrix.add_apply]
+          unfold ket00 ket11
+          unfold_let second_expansion
+          simp
+        }
     have first_eq_second (φ : Qubit) (hφ : |φ| = 1) :
       first_expansion φ = second_expansion φ
       := calc
