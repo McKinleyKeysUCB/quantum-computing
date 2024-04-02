@@ -23,7 +23,7 @@ lemma norm_ket_plus_eq_1 :
     rw [inv_eq_one_div, add_halves]
 
 lemma qubit_tens_qubit (a b : Qubit) :
-  a ⊗ b = Matrix.of (fun i _ =>
+  a ⊗ b = fun i _ =>
     if i = 0 then
       (a 0 0) * (b 0 0)
     else if i = 1 then
@@ -32,7 +32,6 @@ lemma qubit_tens_qubit (a b : Qubit) :
       (a 1 0) * (b 0 0)
     else
       (a 1 0) * (b 1 0)
-  )
   := by
     dsimp only [tens]
     simp
@@ -143,7 +142,7 @@ lemma decompose_qubit_into_Z_basis (φ : Qubit) :
 lemma tens_self (φ : Qubit) :
   let α := φ 0 0
   let β := φ 1 0
-  φ ⊗ φ = Matrix.of (fun i _ =>
+  φ ⊗ φ = fun i _ =>
     if i = 0 then
       α^2
     else if i = 1 then
@@ -152,7 +151,6 @@ lemma tens_self (φ : Qubit) :
       β * α
     else
       β^2
-  )
   := by
     intro α β
     rw [qubit_tens_qubit, pow_two, pow_two]

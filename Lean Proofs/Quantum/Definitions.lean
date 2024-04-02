@@ -78,7 +78,6 @@ def tens {m₁ n₁ m₂ n₂ : ℕ} (A : QMatrix m₁ n₁) (B : QMatrix m₂ n
   :=
     Matrix.of (fun (i j) =>
       A (Fin.divNat i) (Fin.divNat j) *
-      B (Fin.modNat i) (Fin.modNat j)
-    )
+      B (Fin.modNat i) (Fin.modNat j))
 
 infixl:70 " ⊗ " => tens
