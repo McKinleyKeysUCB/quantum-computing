@@ -2,48 +2,67 @@
 import Mathlib.Data.Real.Basic
 
 -- def Prob : Set ℝ := {x : ℝ | 0 ≤ x ∧ x ≤ 1}
-notation "[0,1]" => ℝ
+@[reducible]
+def Prob := ℝ
+notation "[0,1]" => Prob
 
 @[reducible, simp]
-def M (α : Type) := (α → [0,1]) → [0,1]
+def RandM (α : Type) := (α → [0,1]) → [0,1]
 
-@[reducible, simp]
+@[simp]
+def RandM.pure (x : α) : RandM α :=
+  fun f => f x
+
+@[simp]
+def RandM.bind (left : RandM α) (right : α → RandM β) : RandM β :=
+  fun (f : β → [0,1]) =>
+    left (fun (x : α) => right x f)
+
+@[simp]
+instance : Monad RandM where
+  pure := RandM.pure
+  bind := RandM.bind
+
+
+
+@[simp]
+def does_equal [DecidableEq α] (t : α) (x : α) : [0,1] :=
+  if t = x then (1 : ℝ) else (0 : ℝ)
+
+@[simp]
+def probability_equals [DecidableEq α] (a : RandM α) (b : α) : [0,1] :=
+  a (does_equal b)
+
+notation:100 "ℙ[" a:100 " = " b:100 "]" => probability_equals a b
+
+
+
+@[simp]
 noncomputable
-def coin_flip : M Bool :=
+def coin_flip : RandM Bool :=
   fun f =>
     1/2 * f false + 1/2 * f true
 
-@[reducible, simp]
-def my_unit {τ : Type} (t : τ) : M τ :=
-  fun f => f t
-
-@[reducible, simp]
-def my_bind {τ σ : Type} (μ : M τ) (m : τ → M σ) : M σ :=
-  fun f =>
-    μ (fun x : τ => m x f)
-
 @[simp]
-instance : Monad M where
-  pure := my_unit
-  bind := my_bind
-
-@[reducible, simp]
 noncomputable
-def nat_coin_flip : M ℕ :=
-  my_bind coin_flip (fun heads => if heads then 1 else 0)
-
-noncomputable
-def test (n : ℕ) : M Bool :=
-  if n = 0 then
-    my_unit true
+def nat_coin_flip : RandM ℕ := do
+  if ← coin_flip then
+    pure 1
   else
-    my_bind (coin_flip) fun heads =>
-      if heads && n = 5 then
-        my_unit true
-      else
-        my_unit false
+    pure 0
+
 noncomputable
-def test' (n : ℕ) : M Bool := do
+def test (n : ℕ) : RandM Bool :=
+  if n = 0 then
+    pure true
+  else
+    bind (coin_flip) fun heads =>
+      if heads && n = 5 then
+        pure true
+      else
+        pure false
+noncomputable
+def test' (n : ℕ) : RandM Bool := do
   if n = 0 then
     pure true
   else
@@ -53,33 +72,22 @@ def test' (n : ℕ) : M Bool := do
     else
       pure false
 
--- def two_flips : M ℕ :=
---   my_bind nat_coin_flip fun a =>
---     my_bind nat_coin_flip fun b =>
---       my_unit (a + b)
-
+-- noncomputable
+-- def two_flips : RandM ℕ :=
+--   bind nat_coin_flip fun a =>
+--     bind nat_coin_flip fun b =>
+--       pure (a + b)
 noncomputable
-def two_flips : M ℕ := do
+def two_flips : RandM ℕ := do
   let a ← nat_coin_flip
   let b ← nat_coin_flip
   pure (a + b)
-
-@[reducible, simp]
-def does_equal {α : Type} [DecidableEq α] (t : α) (x : α) : [0,1] :=
-  if t = x then 1 else 0
-
-@[reducible, simp]
-def probability_equals {α : Type} [DecidableEq α] (a : M α) (b : α) : [0,1] :=
-  a (does_equal b)
-
-notation:100 "ℙ[" a:100 " = " b:100 "]" => probability_equals a b
 
 lemma test_0_eq_true :
   ℙ[test 0 = true] = 1
   := by
     unfold test
     simp
-
 lemma test'_0_eq_true :
   ℙ[test' 0 = true] = 1
   := by
@@ -97,8 +105,21 @@ lemma test'_5_is_50_50 :
     unfold test'
     simp
 
+lemma Pr_two_flips_eq_0 :
+  ℙ[two_flips = 0] = 1/4
+  := by
+    unfold two_flips
+    simp
+    norm_num
 lemma Pr_two_flips_eq_1 :
   ℙ[two_flips = 1] = 1/2
   := by
     unfold two_flips
     simp
+    norm_num
+lemma Pr_two_flips_eq_2 :
+  ℙ[two_flips = 2] = 1/4
+  := by
+    unfold two_flips
+    simp
+    norm_num
