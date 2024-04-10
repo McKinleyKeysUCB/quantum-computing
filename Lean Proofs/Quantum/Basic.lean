@@ -154,3 +154,34 @@ lemma tens_self (φ : Qubit) :
   := by
     intro α β
     rw [qubit_tens_qubit, pow_two, pow_two]
+
+
+
+/-
+ - Adjoints
+ -/
+
+@[simp]
+lemma double_adjoint {m n : ℕ} (M : QMatrix m n) :
+  M†† = M
+  := by
+    apply Matrix.ext
+    intro i j
+    simp
+
+@[simp]
+lemma adjoint_mul {a b c : ℕ} (A : QMatrix a b) (B : QMatrix b c) :
+  (A * B)† = B† * A†
+  := by
+    apply Matrix.ext
+    intro i j
+    rw [Matrix.mul_apply']
+    unfold QMatrix.adjoint
+    rw [Matrix.mul_apply', ← Matrix.star_dotProduct_star]
+    rfl
+
+@[simp]
+lemma proj_hermitian {m n : ℕ} (M : QMatrix m n) :
+  QSquare.hermitian (M * M†)
+  := by
+    simp
