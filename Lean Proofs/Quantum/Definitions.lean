@@ -220,20 +220,71 @@ lemma one_proj_phi' {φ : Qubit} :
     sorry
 
 
+lemma cong_symm {n : ℕ} {a b : QVector n} :
+  (a ≡ b) → (b ≡ a)
+  := by
+    intro ⟨c, ⟨hc, h⟩⟩
+    use conj c
+    constructor
+    · simp [hc]
+    · rw [
+        ← h,
+        smul_smul,
+        ← Complex.normSq_eq_conj_mul_self,
+        hc,
+      ]
+      simp
+
+lemma cong_comm {n : ℕ} {a b : QVector n} :
+  (a ≡ b) ↔ (b ≡ a)
+  :=
+    ⟨cong_symm, cong_symm⟩
+
+lemma ncong_of_eq_zero_of_ne_zero {n : ℕ} {a b : QVector n} (i : Fin n) (ha : a i 0 = 0) (hb : b i 0 ≠ 0) :
+  a ≢ b
+  := by
+    apply by_contradiction
+    intro h
+    rw [not_not] at h
+    rcases h with ⟨c, ⟨_, h⟩⟩
+    apply Matrix.ext_iff.mpr at h
+    specialize h i 0
+    rw [Matrix.smul_apply, ha, smul_zero] at h
+    exact hb h.symm
 
 lemma ncong_zero_of_ne_zero {n : ℕ} {φ : QVector n} (h : φ ≠ 0) :
   ¬φ ≡ 0
   := by
-    sorry
+    rw [
+      Ne,
+      ← Matrix.ext_iff,
+      not_forall,
+    ] at h
+    rcases h with ⟨i, h⟩
+    rw [not_forall] at h
+    rcases h with ⟨j, h⟩
+    rw [Matrix.zero_apply] at h
+    rw [cong_comm]
+    apply ncong_of_eq_zero_of_ne_zero i
+    · rw [Matrix.zero_apply]
+    · rw [← Fin.eq_zero j]
+      exact h
 
 lemma ncong_smul_of_ncong {n : ℕ} {a b : QVector n} {c : ℂ} (h : a ≢ b) :
   a ≢ c • b
   := by
+    apply by_contradiction
+    intro h'
+    rw [not_not] at h'
+    rcases h' with ⟨c', ⟨hc', h'⟩⟩
+    
     sorry
 lemma ket0_ncong_ket1 :
   |0⟩ ≢ |1⟩
   := by
-    sorry
+    apply ncong_of_eq_zero_of_ne_zero 1
+    · simp [ket0]
+    · simp [ket1]
 
 lemma zero_zero :
   (0 : ℝ) • (0 : QMatrix 2 1) = (0 : QMatrix 2 1)
@@ -254,6 +305,11 @@ lemma real_smul {r : ℝ} {m n : ℕ} {A : QMatrix m n} :
     intro i j
     simp [Matrix.smul_apply]
 
+lemma cong_smul_self {n : ℕ} {φ : QVector n} {c : ℂ} (hc : Complex.normSq c = 1):
+  φ ≡ c • φ
+  := by
+    use c
+
 lemma Qmeasure0 {φ : Qubit} :
   ℙ[Zmeasure φ ≡ |0⟩] = ‖φ.α‖
   := by
@@ -263,10 +319,6 @@ lemma Qmeasure0 {φ : Qubit} :
       unfold Zmeasure Qmeasure
       simp [zero_proj_phi', one_proj_phi']
       rw [zero_proj_phi, one_proj_phi]
-      intro f
-      arg 1
-      arg 2
-      arg 1
     simp
     nth_rw 2 [if_neg]
     rw [add_zero]
@@ -280,16 +332,18 @@ lemma Qmeasure0 {φ : Qubit} :
       rw [ket0]
       simp
     · rw [if_pos]
-      use ((1 / Real.sqrt (Complex.normSq φ.α)) : ℝ) * φ.α
-      constructor
-      · rw [Complex.normSq_mul]
-        rw [Complex.normSq_ofReal]
-        rw [@one_div_mul_one_div]
-        rw [Real.mul_self_sqrt (Complex.normSq_nonneg _)]
-        rw [@mul_comm_div, div_self, one_mul]
-        exact (map_ne_zero Complex.normSq).mpr hα
-      · rw [← smul_smul]
-        simp
+      rw [smul_smul]
+      apply cong_smul_self
+      rw [
+        Complex.normSq_mul,
+        Complex.normSq_inv,
+        Complex.normSq_ofReal,
+        Real.mul_self_sqrt (Complex.normSq_nonneg _),
+        inv_mul_eq_div,
+        ← Complex.normSq_div,
+        div_self hα,
+      ]
+      apply map_one
     rw [smul_smul]
     apply ncong_smul_of_ncong
     exact ket0_ncong_ket1
