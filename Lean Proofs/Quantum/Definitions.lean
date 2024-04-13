@@ -40,14 +40,18 @@ def norm (φ : Qubit) :=
 notation:70 "|" φ "|" => norm φ
 notation:70 "‖" φ "‖" => Complex.normSq φ
 
+@[reducible]
 def ket0 : Qubit :=
   Matrix.of (fun i _ => if i = 0 then 1 else 0)
 
+@[reducible]
 def bra0 := ket0†
 
+@[reducible]
 def ket1 : Qubit :=
   Matrix.of (fun i _ => if i = 1 then 1 else 0)
 
+@[reducible]
 def bra1 := ket1†
 
 noncomputable
@@ -83,15 +87,19 @@ notation "⟨1|" => bra1
  - Bell States
  -/
 
+@[reducible]
 noncomputable
 def ket_Phi_plus : Qubits 2 :=
   (1/√2) • (|00⟩ + |11⟩)
+@[reducible]
 noncomputable
 def ket_Phi_minus : Qubits 2 :=
   (1/√2) • (|00⟩ - |11⟩)
+@[reducible]
 noncomputable
 def ket_Psi_plus : Qubits 2 :=
   (1/√2) • (|01⟩ + |10⟩)
+@[reducible]
 noncomputable
 def ket_Psi_minus : Qubits 2 :=
   (1/√2) • (|01⟩ - |10⟩)
@@ -415,6 +423,6 @@ section MatrixProperties
 variable {m n : ℕ} (M : QMatrix m n)
 
 @[simp]
-def QMatrix.unitary := M * M† = 1
+def QMatrix.unitary := M† * M = 1
 
 end MatrixProperties

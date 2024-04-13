@@ -32,6 +32,18 @@ lemma Fin.eq_three_of_ne_all {i : Fin 4} (hi0 : i ≠ 0) (hi1 : i ≠ 1) (hi2 : 
     apply (Nat.lt_of_le_of_ne · hi1.symm) at hi0
     exact Nat.lt_of_le_of_ne hi0 hi2.symm
 
+lemma Fin.bash2 {P : Fin 2 → Fin 1 → Prop} (hP0 : P 0 0) (hP1 : P 1 0) :
+  ∀ (i : Fin 2) (j : Fin 1), P i j
+  := by
+    intro i j
+    rw [Fin.eq_zero_of_Fin_1 (i := j)]
+    by_cases hi0 : i = 0
+    · rw [hi0]
+      exact hP0
+    have hi1 : i = 1 := eq_one_of_neq_zero i hi0
+    rw [hi1]
+    exact hP1
+
 lemma Fin.bash4 {P : Fin 4 → Fin 1 → Prop} (hP0 : P 0 0) (hP1 : P 1 0) (hP2 : P 2 0) (hP3 : P 3 0) :
   ∀ (i : Fin 4) (j : Fin 1), P i j
   := by

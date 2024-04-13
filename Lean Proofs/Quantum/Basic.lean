@@ -22,6 +22,52 @@ lemma norm_ket_plus_eq_1 :
     simp [norm, ket_plus, Qubit.α, Qubit.β]
     rw [inv_eq_one_div, add_halves]
 
+lemma qubit_unitary {φ : Qubit} (h : Complex.normSq φ.α + Complex.normSq φ.β = 1) :
+  φ.unitary
+  := by
+    sorry
+
+lemma ket0_unitary :
+  |0⟩.unitary
+  := by
+    apply qubit_unitary
+    unfold Qubit.α Qubit.β ket0
+    simp
+lemma ket1_unitary :
+  |1⟩.unitary
+  := by
+    apply qubit_unitary
+    unfold Qubit.α Qubit.β ket1
+    simp
+lemma bra1_mul_ket0 :
+  ⟨1| * |0⟩ = 0
+  := by
+    unfold bra1 ket0 ket1 QMatrix.adjoint
+    apply Matrix.ext
+    intro i j
+    simp [Matrix.mul_apply]
+lemma bra0_mul_ket1 :
+  ⟨0| * |1⟩ = 0
+  := by
+    unfold bra0 ket0 ket1 QMatrix.adjoint
+    apply Matrix.ext
+    intro i j
+    simp [Matrix.mul_apply]
+
+lemma ket_plus_eq_ket0_plus_ket1 :
+  |+⟩ = (1/√2) • (|0⟩ + |1⟩)
+  := by
+    unfold ket_plus ket0 ket1
+    apply Matrix.ext
+    apply Fin.bash2 <;> simp
+
+lemma ket_minus_eq_ket0_minus_ket1 :
+  |-⟩ = (1/√2) • (|0⟩ - |1⟩)
+  := by
+    unfold ket_minus ket0 ket1
+    apply Matrix.ext
+    apply Fin.bash2 <;> simp
+
 lemma qubit_tens_qubit (a b : Qubit) :
   a ⨂ b = fun i _ =>
     if i = 0 then
@@ -111,6 +157,109 @@ lemma tens_smul {m₁ n₁ m₂ n₂ : ℕ} {s : ℂ} {A : QMatrix m₁ n₁} {B
     apply funext₂
     intro i j
     ring
+
+def div_mod_inv {a b : ℕ} (q : Fin a) (r : Fin b) : Fin (a * b) :=
+  ⟨b * q + r, by
+    rcases q with ⟨q, hq⟩
+    rcases r with ⟨r, hr⟩
+    dsimp only
+    have : q + 1 ≤ a := by
+      exact hq
+    calc
+      _ < b * q + b       := by simp [hr]
+      _ = b * (q + 1)     := by ring
+      _ ≤ b * a           := Nat.mul_le_mul_left b hq
+      _ = a * b           := mul_comm _ _
+  ⟩
+
+-- theorem tens_ext {M : QMatrix (m*p) (n*q)} (h : ∀ (r : Fin m) (s : Fin n) (v : Fin p) (w : Fin q), A r s * B v w = M (div_mod_inv r v) (div_mod_inv s w)) :
+--   -- A ⨂ B = M
+--   M = A ⨂ B
+--   := by
+--     sorry
+
+lemma tens_mul_tens {a₁ b₁ c₁ a₂ b₂ c₂ : ℕ} {A : QMatrix a₁ b₁} {B : QMatrix a₂ b₂} {C : QMatrix b₁ c₁} {D : QMatrix b₂ c₂} :
+  (A ⨂ B) * (C ⨂ D) = (A * C) ⨂ (B * D)
+  := by
+    -- apply tens_ext
+    -- intro r s v w
+    -- unfold tens
+    -- rw [Matrix.mul_apply, Matrix.mul_apply, Matrix.mul_apply]
+    -- dsimp
+    simp
+    apply Matrix.ext
+    intro i j
+    simp [Matrix.mul_apply]
+    rw [Finset.sum_mul_sum]
+    
+    sorry
+
+lemma zero_tens {m₁ n₁ m₂ n₂ : ℕ} {M : QMatrix m₂ n₂} :
+  (0 : QMatrix m₁ n₁) ⨂ M = 0
+  := by
+    simp
+    rfl
+lemma tens_zero {m₁ n₁ m₂ n₂ : ℕ} {M : QMatrix m₁ n₁} :
+  M ⨂ (0 : QMatrix m₂ n₂) = 0
+  := by
+    simp
+    rfl
+
+lemma CNOT_mul_ket0_tens {φ : Qubit} :
+  CNOT * (|0⟩ ⨂ φ) = |0⟩ ⨂ φ
+  := by
+    unfold CNOT
+    rw [
+      Matrix.add_mul,
+      tens_mul_tens,
+      tens_mul_tens,
+      Matrix.mul_assoc,
+      ket0_unitary,
+      Matrix.mul_assoc,
+      bra1_mul_ket0,
+      Matrix.mul_one,
+      Matrix.mul_zero,
+      zero_tens,
+      I₂,
+      Matrix.one_mul,
+    ]
+    simp
+lemma CNOT_mul_ket1_tens {φ : Qubit} :
+  CNOT * (|1⟩ ⨂ φ) = |1⟩ ⨂ (X * φ)
+  := by
+    unfold CNOT
+    rw [
+      Matrix.add_mul,
+      tens_mul_tens,
+      tens_mul_tens,
+      Matrix.mul_assoc,
+      Matrix.mul_assoc,
+      ket1_unitary,
+      bra0_mul_ket1,
+      Matrix.mul_one,
+      Matrix.mul_zero,
+      zero_tens,
+    ]
+    simp
+
+lemma X_mul_ket0 :
+  X * |0⟩ = |1⟩
+  := by
+    unfold X ket0 ket1
+    apply Matrix.ext
+    apply Fin.bash2 <;> {
+      rw [Matrix.mul_apply]
+      simp
+    }
+lemma X_mul_ket1 :
+  X * |1⟩ = |0⟩
+  := by
+    unfold X ket0 ket1
+    apply Matrix.ext
+    apply Fin.bash2 <;> {
+      rw [Matrix.mul_apply]
+      simp
+    }
 
 lemma decompose_qubit_into_Z_basis (φ : Qubit) :
   φ = φ.α • |0⟩ + φ.β • |1⟩

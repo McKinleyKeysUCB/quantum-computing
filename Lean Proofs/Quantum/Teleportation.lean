@@ -13,15 +13,30 @@ def extract₂ (state : Qubits 3) : Random Qubit := do
   sorry
 
 def entangle :
-  CNOT * (I₂ ⨂ H) * |00⟩ = |Φ+⟩
+  CNOT' * (I₂ ⨂ H) * |00⟩ = |Φ+⟩
   := by
     sorry
 def entangle' :
-  CNOT' * (H ⨂ I₂) * |00⟩ = |Φ+⟩
+  CNOT * (H ⨂ I₂) * |00⟩ = |Φ+⟩
   := by
-    rw [Matrix.mul_assoc, ← ket0_tens_ket0_eq_ket00, tens_mul_tens]
-    
-    sorry
+    rw [
+      Matrix.mul_assoc,
+      ← ket0_tens_ket0_eq_ket00,
+      tens_mul_tens,
+      H_ket0,
+      I₂,
+      Matrix.one_mul,
+      ket_plus_eq_ket0_plus_ket1,
+      smul_tens,
+      add_tens,
+      Matrix.mul_smul,
+      Matrix.mul_add,
+      CNOT_mul_ket0_tens,
+      CNOT_mul_ket1_tens,
+      X_mul_ket0,
+      ket0_tens_ket0_eq_ket00,
+      ket1_tens_ket1_eq_ket11,
+    ]
 
 noncomputable
 def teleport (φ : Qubit) : Random Qubit := do
