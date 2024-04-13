@@ -1,22 +1,88 @@
 
 import Quantum.Basic
 
-def CNOT₂₁ := I₂ ⨂ I₂ ⨂ |0⟩⟨0| + I₂ ⨂ X ⨂ |1⟩⟨1|
-def CNOT₀₁ := |0⟩⟨0| ⨂ I₂ ⨂ I₂ + |1⟩⟨1| ⨂ X ⨂ I₂
+def CNOT₂₁ := I₂ ⨂ CNOT'
+def CNOT₀₁ := CNOT ⨂ I₂
 
 noncomputable
-def teleport (state : Qubits 3) : Random (Qubits 3) := do
-  let first_stage := CNOT₂₁ * (I₂ ⨂ I₂ ⨂ H)
-  let second_stage := (H ⨂ I₂ ⨂ I₂) * CNOT₀₁
-  let state₁ : Qubits 3 := first_stage * state
-  let state₂ : Qubits 3 := second_stage * state
-  let ⟨a, state₃⟩ ← Qmeasure₃₀ state₂
-  let ⟨b, state₄⟩ ← Qmeasure₃₁ state₃
-  
+def Qmeasure₀ := Qmeasure₃₀
+noncomputable
+def Qmeasure₁ := Qmeasure₃₁
+
+def extract₂ (state : Qubits 3) : Random Qubit := do
   sorry
-  
+
+def entangle :
+  CNOT * (I₂ ⨂ H) * |00⟩ = |Φ+⟩
+  := by
+    sorry
+def entangle' :
+  CNOT' * (H ⨂ I₂) * |00⟩ = |Φ+⟩
+  := by
+    rw [Matrix.mul_assoc, ← ket0_tens_ket0_eq_ket00, tens_mul_tens]
+    
+    sorry
+
+noncomputable
+def teleport (φ : Qubit) : Random Qubit := do
+  let state₀ := φ ⨂ |00⟩
+  let state₁ := CNOT₂₁ * (I₂ ⨂ I₂ ⨂ H) * state₀
+  have : state₁ = φ ⨂ (1/√2)•(|00⟩ + |11⟩) := by
+    unfold_let state₁
+    
+    sorry
+  let state₂ := (H ⨂ I₂ ⨂ I₂) * CNOT₀₁ * state₁
+  let ⟨a, state₃⟩ ← Qmeasure₀ state₂
+  let ⟨b, state₄⟩ ← Qmeasure₁ state₃
+  let mut final ← extract₂ state₄
+  if a then
+    final := X * final
+  if b then
+    final := Z * final
+  pure final
+
+def mymul (a b : ℕ) := a * b
+def myadd (a b : ℕ) := a + b
+
+def blah (n : ℕ) :=
+  let a := mymul n 2
+  let b := myadd a 1
+  myadd a b
+
+def binary_search (arr : List ℕ) (key : ℕ) : Bool :=
+  let mid := (arr.length / 2)
+  if arr.length = 0 then false
+  else if arr.get mid = key then true
+  else if key < arr.get mid then binary_search arr.take mid key
+  else binary_search arr.drop (mid + 1) key
+
+-- example {n : ℕ} :
+--   blah n = myadd (mymul 4 n) 1
+--   := by
+--     unfold blah
+--     rw?
+    
+    -- sorry
+    -- conv =>
+    --   lhs
+    --   intro a b
+    
+    -- show 1 + 1 = 2
+    -- sorry
 
 theorem quantum_teleportation {φ : Qubit} :
-  (teleport (φ ⨂ |00⟩)).extract 2 = φ
+  ℙ[teleport φ = φ] = 1
   := by
+    unfold teleport probability_equals does_equal
+    -- simp [Qmeasure₀, I₂, X, Z, CNOT₀₁, CNOT₂₁]
+    
+    conv =>
+      lhs
+      arg 0
+      intro state₀
+    
+      -- arg 0
+      -- intro state₀
+      -- intro state₁
+      -- intro state₂
     sorry

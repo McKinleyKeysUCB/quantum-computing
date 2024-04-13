@@ -7,6 +7,8 @@ import Quantum.Probability
 
 open ComplexConjugate BigOperators Nat
 
+notation "√" a => Complex.ofReal (Real.sqrt a)
+
 @[reducible]
 def QMatrix (m n : ℕ) := Matrix (Fin m) (Fin n) ℂ
 @[reducible]
@@ -37,22 +39,22 @@ notation:70 "|" φ "|" => norm φ
 notation:70 "‖" φ "‖" => Complex.normSq φ
 
 def ket0 : Qubit :=
-  fun i _ => if i = 0 then 1 else 0
+  Matrix.of (fun i _ => if i = 0 then 1 else 0)
 
 def bra0 := ket0†
-  
+
 def ket1 : Qubit :=
-  fun i _ => if i = 1 then 1 else 0
+  Matrix.of (fun i _ => if i = 1 then 1 else 0)
 
 def bra1 := ket1†
 
 noncomputable
 def ket_plus : Qubit :=
-  fun _ _ => 1 / Real.sqrt 2
+  (1/√2) • Matrix.of (fun _ _ => 1)
 
 noncomputable
 def ket_minus : Qubit :=
-  fun i _ => if i = 0 then 1 / Real.sqrt 2 else -1 / Real.sqrt 2
+  (1/√2) • Matrix.of (fun i _ => if i = 0 then 1 else -1)
 
 def ket00 : Qubits 2 :=
   fun i _ => if i = 0 then 1 else 0
@@ -74,6 +76,30 @@ notation "|-⟩" => ket_minus
 notation "⟨0|" => bra0
 notation "⟨1|" => bra1
 
+
+/-
+ - Bell States
+ -/
+
+noncomputable
+def ket_Phi_plus : Qubits 2 :=
+  (1/√2) • (|00⟩ + |11⟩)
+noncomputable
+def ket_Phi_minus : Qubits 2 :=
+  (1/√2) • (|00⟩ - |11⟩)
+noncomputable
+def ket_Psi_plus : Qubits 2 :=
+  (1/√2) • (|01⟩ + |10⟩)
+noncomputable
+def ket_Psi_minus : Qubits 2 :=
+  (1/√2) • (|01⟩ - |10⟩)
+
+notation "|Φ+⟩" => ket_Phi_plus
+notation "|Φ-⟩" => ket_Phi_minus
+notation "|Ψ+⟩" => ket_Psi_plus
+notation "|Ψ-⟩" => ket_Psi_minus
+
+
 def I {n : ℕ} : QSquare n := 1
 def I₂ : QSquare 2 := 1
 
@@ -94,36 +120,18 @@ def Z : QSquare 2 :=
     else
       0
 
+@[simp]
 noncomputable
 def H : QSquare 2 :=
-  fun i j =>
-    if i = 0 then
-      1 / Real.sqrt 2
+  (1/√2) • Matrix.of (fun i j =>
+    if i = 0 ∨ j = 0 then
+      1
     else
-      if j = 0 then 1 / Real.sqrt 2 else -1 / Real.sqrt 2
+      -1
+  )
 
-def CNOT : QSquare 4 :=
-  fun i j =>
-    if i = 0 ∨ i = 1 then
-      if i = j then 1 else 0
-    else
-      if (i = 2 ∧ j = 3) ∨ (i = 3 ∧ j = 2) then
-        1
-      else
-        0
-
-def CNOT' (n : ℕ) (control target : Fin n) : QSquare (2^n) :=
-  fun i j =>
-    
-    sorry
-
-def CX (n : ℕ) (control target : Fin n) : QSquare (2^n) :=
-  fun i j =>
-    
-    sorry
-def CZ (n : ℕ) (control target : Fin n) : QSquare (2^n) :=
-  fun i j =>
-    sorry
+notation "|0⟩⟨0|" => |0⟩ * ⟨0|
+notation "|1⟩⟨1|" => |1⟩ * ⟨1|
 
 @[simp]
 def tens {m₁ n₁ m₂ n₂ : ℕ} (A : QMatrix m₁ n₁) (B : QMatrix m₂ n₂) :
@@ -135,19 +143,26 @@ def tens {m₁ n₁ m₂ n₂ : ℕ} (A : QMatrix m₁ n₁) (B : QMatrix m₂ n
 
 infixl:70 " ⨂ " => tens
 
-def Qubits.extract {n : ℕ} (state : Qubits n) (i : Fin n) : Qubit :=
-  sorry
+-- def partial_trace {n m : ℕ} (M : QSquare (n * m)) : QSquare n :=
+--   fun i j =>
+--     ∑ k, sorry
 
-notation:90 state "[" i "]" => Qubits.extract state i
+@[reducible]
+def CNOT : QSquare 4 :=
+  |0⟩⟨0| ⨂ I₂ + |1⟩⟨1| ⨂ X
 
+@[reducible]
+def CNOT' : QSquare 4 :=
+  I₂ ⨂ |0⟩⟨0| + X ⨂ |1⟩⟨1|
+
+def CNOTₙ (n : ℕ) (control target : Fin n) : QSquare (2^n) :=
+  fun i j =>
+    sorry
 
 @[simp]
 def zero_proj : QMatrix 2 2 := |0⟩ * ⟨0|
 @[simp]
 def one_proj : QMatrix 2 2 := |1⟩ * ⟨1|
-
-notation "|0⟩⟨0|" => |0⟩ * ⟨0|
-notation "|1⟩⟨1|" => |1⟩ * ⟨1|
 
 def QMatrix.toReal (M : QMatrix 1 1) : ℝ :=
   (M 0 0).re

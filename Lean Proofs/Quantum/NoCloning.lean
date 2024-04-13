@@ -40,10 +40,10 @@ theorem no_cloning :
         rw [
           add_tens,
           Matrix.mul_add,
-          mul_tens,
+          smul_tens,
           Matrix.mul_smul,
           h _ norm_ket0_eq_1,
-          mul_tens,
+          smul_tens,
           Matrix.mul_smul,
           h _ norm_ket1_eq_1,
           ket0_tens_ket0_eq_ket00,
