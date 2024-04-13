@@ -5,7 +5,7 @@ import Mathlib.Data.Real.Sqrt
 import Mathlib.Data.Complex.Basic
 import Quantum.Probability
 
-open ComplexConjugate
+open ComplexConjugate BigOperators Nat
 
 @[reducible]
 def QMatrix (m n : ℕ) := Matrix (Fin m) (Fin n) ℂ
@@ -74,23 +74,35 @@ notation "|-⟩" => ket_minus
 notation "⟨0|" => bra0
 notation "⟨1|" => bra1
 
-def X := ![
-  ![0, 1],
-  ![1, 0]
-]
-def Z := ![
-  ![1, 0],
-  ![0, -1]
-]
+def I {n : ℕ} : QSquare n := 1
+def I₂ : QSquare 2 := 1
+
+def X : QSquare 2 :=
+  fun i j =>
+    if i = j then
+      0
+    else
+      1
+
+def Z : QSquare 2 :=
+  fun i j =>
+    if i = j then
+      if i = 0 then
+        1
+      else
+        -1
+    else
+      0
+
 noncomputable
-def H : QMatrix 2 2 :=
+def H : QSquare 2 :=
   fun i j =>
     if i = 0 then
       1 / Real.sqrt 2
     else
       if j = 0 then 1 / Real.sqrt 2 else -1 / Real.sqrt 2
 
-def CNOT : QMatrix 4 4 :=
+def CNOT : QSquare 4 :=
   fun i j =>
     if i = 0 ∨ i = 1 then
       if i = j then 1 else 0
@@ -100,33 +112,18 @@ def CNOT : QMatrix 4 4 :=
       else
         0
 
-def CNOT' (n : ℕ) (control target : Fin n) : QMatrix (2^n) (2^n) :=
+def CNOT' (n : ℕ) (control target : Fin n) : QSquare (2^n) :=
   fun i j =>
     
     sorry
 
-def Distribution (α : Type) := α → ℝ
-
-noncomputable
-def Z_measure (φ : Qubit) : Distribution Qubit :=
-  fun ψ =>
-    if ψ = |0⟩ then
-      ‖φ.α‖
-    else if ψ = |1⟩ then
-      ‖φ.β‖
-    else
-      0
-
-noncomputable
-def Z_measure_state {n : ℕ} (state : Qubits n) (i : Fin n) :
-  Distribution (Qubits n)
-  :=
+def CX (n : ℕ) (control target : Fin n) : QSquare (2^n) :=
+  fun i j =>
     
     sorry
-
-def I (n : ℕ) : QMatrix n n :=
+def CZ (n : ℕ) (control target : Fin n) : QSquare (2^n) :=
   fun i j =>
-    if i = j then 1 else 0
+    sorry
 
 @[simp]
 def tens {m₁ n₁ m₂ n₂ : ℕ} (A : QMatrix m₁ n₁) (B : QMatrix m₂ n₂) :
@@ -136,7 +133,7 @@ def tens {m₁ n₁ m₂ n₂ : ℕ} (A : QMatrix m₁ n₁) (B : QMatrix m₂ n
       A (Fin.divNat i) (Fin.divNat j) *
       B (Fin.modNat i) (Fin.modNat j))
 
-infixl:70 " ⊗ " => tens
+infixl:70 " ⨂ " => tens
 
 def Qubits.extract {n : ℕ} (state : Qubits n) (i : Fin n) : Qubit :=
   sorry
@@ -148,6 +145,9 @@ notation:90 state "[" i "]" => Qubits.extract state i
 def zero_proj : QMatrix 2 2 := |0⟩ * ⟨0|
 @[simp]
 def one_proj : QMatrix 2 2 := |1⟩ * ⟨1|
+
+notation "|0⟩⟨0|" => |0⟩ * ⟨0|
+notation "|1⟩⟨1|" => |1⟩ * ⟨1|
 
 def QMatrix.toReal (M : QMatrix 1 1) : ℝ :=
   (M 0 0).re
@@ -183,39 +183,59 @@ notation "ℙ[" a:100 " ≡ " b:100 "]" => probability_congruent a b
 
 @[simp]
 noncomputable
-def Qmeasure {n : ℕ} (φ : QVector n) (M₀ M₁ : QSquare n) : RandM (QVector n) :=
-  let p₀ : [0,1] := (M₀ * φ)† * (M₀ * φ)
-  let φ₀ := Complex.ofReal' (1 / p₀.sqrt) • (M₀ * φ)
-  let p₁ : [0,1] := (M₁ * φ)† * (M₁ * φ)
-  let φ₁ : QVector n := Complex.ofReal' (1 / p₁.sqrt) • (M₁ * φ)
-  fun f => p₀ * f φ₀ + p₁ * f φ₁
+def Qmeasure_general {n m : ℕ} (φ : QVector n) (M : Fin m → QSquare n) : RandM (QVector n) :=
+  fun f =>
+    ∑ i : Fin m,
+      let Mᵢ := M i
+      let p : [0,1] := (Mᵢ * φ)† * (Mᵢ * φ)
+      let φᵢ := Complex.ofReal' (1 / p.sqrt) • (Mᵢ * φ)
+      p * f φᵢ
 
 @[simp]
 noncomputable
-def Zmeasure (φ : Qubit) : RandM Qubit :=
-  Qmeasure φ zero_proj one_proj
+def Qmeasure_single_qubit {n : ℕ} (φ : QVector n) (M₀ M₁ : QSquare n) : RandM (Bool × QVector n) :=
+  let p₀ : [0,1] := (M₀ * φ)† * (M₀ * φ)
+  let φ₀ := Complex.ofReal' (1 / p₀.sqrt) • (M₀ * φ)
+  let p₁ : [0,1] := (M₁ * φ)† * (M₁ * φ)
+  let φ₁ := Complex.ofReal' (1 / p₁.sqrt) • (M₁ * φ)
+  fun f => p₀ * f ⟨false, φ₀⟩ + p₁ * f ⟨true, φ₁⟩
+
+@[simp]
+noncomputable
+def Qmeasure₃₀ (φ : QVector 8) : RandM (Bool × QVector 8) :=
+  Qmeasure_single_qubit φ (|0⟩⟨0| ⨂ I₂ ⨂ I₂) (|1⟩⟨1| ⨂ I₂ ⨂ I₂)
+
+@[simp]
+noncomputable
+def Qmeasure₃₁ (φ : QVector 8) : RandM (Bool × QVector 8) :=
+  Qmeasure_single_qubit φ (I₂ ⨂ |0⟩⟨0| ⨂ I₂) (I₂ ⨂ |1⟩⟨1| ⨂ I₂)
+
+@[simp]
+noncomputable
+def Zmeasure (φ : Qubit) : RandM (Qubit) := do
+  let result ← Qmeasure_single_qubit φ |0⟩⟨0| |1⟩⟨1|
+  pure result.2
 
 def Qmeasure' (φ : Qubit) : RandM Qubit :=
   fun f => ‖φ.α‖ * f |0⟩ + ‖φ.β‖ * f |1⟩
 
--- @[simp]
 lemma zero_proj_phi {φ : Qubit} :
-  |0⟩ * ⟨0| * φ = φ.α • |0⟩
+  |0⟩⟨0| * φ = φ.α • |0⟩
   := by
     sorry
 -- @[simp]
 lemma one_proj_phi {φ : Qubit} :
-  |1⟩ * ⟨1| * φ = φ.β • |1⟩
+  |1⟩⟨1| * φ = φ.β • |1⟩
   := by
     sorry
 @[simp]
 lemma zero_proj_phi' {φ : Qubit} :
-  QMatrix.toReal ((|0⟩ * ⟨0| * φ)† * (|0⟩ * ⟨0| * φ)) = ‖φ.α‖
+  QMatrix.toReal ((|0⟩⟨0| * φ)† * (|0⟩⟨0| * φ)) = ‖φ.α‖
   := by
     sorry
 @[simp]
 lemma one_proj_phi' {φ : Qubit} :
-  QMatrix.toReal ((|1⟩ * ⟨1| * φ)† * (|1⟩ * ⟨1| * φ)) = ‖φ.β‖
+  QMatrix.toReal ((|1⟩⟨1| * φ)† * (|1⟩⟨1| * φ)) = ‖φ.β‖
   := by
     sorry
 
@@ -286,7 +306,7 @@ lemma ket0_ncong_ket1 :
     · simp [ket0]
     · simp [ket1]
 
-lemma zero_zero :
+lemma zero_smul_zero :
   (0 : ℝ) • (0 : QMatrix 2 1) = (0 : QMatrix 2 1)
   := by
     rw [← @Matrix.ext_iff]
@@ -316,7 +336,7 @@ lemma Qmeasure0 {φ : Qubit} :
     conv =>
       lhs
       args
-      unfold Zmeasure Qmeasure
+      unfold Zmeasure Qmeasure_single_qubit
       simp [zero_proj_phi', one_proj_phi']
       rw [zero_proj_phi, one_proj_phi]
     simp
@@ -378,6 +398,6 @@ section MatrixProperties
 variable {m n : ℕ} (M : QMatrix m n)
 
 @[simp]
-def QMatrix.unitary := M * M† = I m
+def QMatrix.unitary := M * M† = 1
 
 end MatrixProperties
