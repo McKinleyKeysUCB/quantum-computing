@@ -7,52 +7,52 @@ def Prob := ℝ
 notation "[0,1]" => Prob
 
 @[reducible, simp]
-def RandM (α : Type) := (α → [0,1]) → [0,1]
+def Random (α : Type) := (α → [0,1]) → [0,1]
 
 @[simp]
-def RandM.pure (x : α) : RandM α :=
+def Random.pure (x : α) : Random α :=
   fun f => f x
 
 @[simp]
-def RandM.bind (left : RandM α) (right : α → RandM β) : RandM β :=
+def Random.bind (left : Random α) (right : α → Random β) : Random β :=
   fun (f : β → [0,1]) =>
     left (fun (x : α) => right x f)
 
 @[simp]
-instance : Monad RandM where
-  pure := RandM.pure
-  bind := RandM.bind
+instance : Monad Random where
+  pure := Random.pure
+  bind := Random.bind
 
 
 
 @[simp]
 def does_equal [DecidableEq α] (t : α) (x : α) : [0,1] :=
-  if t = x then (1 : ℝ) else (0 : ℝ)
+  if t = x then 1 else 0
 
 @[simp]
-def probability_equals [DecidableEq α] (a : RandM α) (b : α) : [0,1] :=
+def probability_equals [DecidableEq α] (a : Random α) (b : α) : [0,1] :=
   a (does_equal b)
 
-notation:100 "ℙ[" a:100 " = " b:100 "]" => probability_equals a b
+notation "ℙ[" a:100 " = " b:100 "]" => probability_equals a b
 
 
 
 @[simp]
 noncomputable
-def coin_flip : RandM Bool :=
+def coin_flip : Random Bool :=
   fun f =>
     1/2 * f false + 1/2 * f true
 
 @[simp]
 noncomputable
-def nat_coin_flip : RandM ℕ := do
+def nat_coin_flip : Random ℕ := do
   if ← coin_flip then
     pure 1
   else
     pure 0
 
 noncomputable
-def test (n : ℕ) : RandM Bool :=
+def test (n : ℕ) : Random Bool :=
   if n = 0 then
     pure true
   else
@@ -62,7 +62,7 @@ def test (n : ℕ) : RandM Bool :=
       else
         pure false
 noncomputable
-def test' (n : ℕ) : RandM Bool := do
+def test' (n : ℕ) : Random Bool := do
   if n = 0 then
     pure true
   else
@@ -73,12 +73,12 @@ def test' (n : ℕ) : RandM Bool := do
       pure false
 
 -- noncomputable
--- def two_flips : RandM ℕ :=
+-- def two_flips : Random ℕ :=
 --   bind nat_coin_flip fun a =>
 --     bind nat_coin_flip fun b =>
 --       pure (a + b)
 noncomputable
-def two_flips : RandM ℕ := do
+def two_flips : Random ℕ := do
   let a ← nat_coin_flip
   let b ← nat_coin_flip
   pure (a + b)

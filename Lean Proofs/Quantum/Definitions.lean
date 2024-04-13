@@ -176,14 +176,14 @@ def is_congruent {n : ℕ} (a b : QVector n) : [0,1] :=
 
 @[simp]
 noncomputable
-def probability_congruent {n : ℕ} (a : RandM (QVector n)) (b : QVector n) : [0,1] :=
+def probability_congruent {n : ℕ} (a : Random (QVector n)) (b : QVector n) : [0,1] :=
   a (is_congruent b)
 
 notation "ℙ[" a:100 " ≡ " b:100 "]" => probability_congruent a b
 
 @[simp]
 noncomputable
-def Qmeasure_general {n m : ℕ} (φ : QVector n) (M : Fin m → QSquare n) : RandM (QVector n) :=
+def Qmeasure_general {n m : ℕ} (φ : QVector n) (M : Fin m → QSquare n) : Random (QVector n) :=
   fun f =>
     ∑ i : Fin m,
       let Mᵢ := M i
@@ -193,7 +193,7 @@ def Qmeasure_general {n m : ℕ} (φ : QVector n) (M : Fin m → QSquare n) : Ra
 
 @[simp]
 noncomputable
-def Qmeasure_single_qubit {n : ℕ} (φ : QVector n) (M₀ M₁ : QSquare n) : RandM (Bool × QVector n) :=
+def Qmeasure_single_qubit {n : ℕ} (φ : QVector n) (M₀ M₁ : QSquare n) : Random (Bool × QVector n) :=
   let p₀ : [0,1] := (M₀ * φ)† * (M₀ * φ)
   let φ₀ := Complex.ofReal' (1 / p₀.sqrt) • (M₀ * φ)
   let p₁ : [0,1] := (M₁ * φ)† * (M₁ * φ)
@@ -202,21 +202,21 @@ def Qmeasure_single_qubit {n : ℕ} (φ : QVector n) (M₀ M₁ : QSquare n) : R
 
 @[simp]
 noncomputable
-def Qmeasure₃₀ (φ : QVector 8) : RandM (Bool × QVector 8) :=
+def Qmeasure₃₀ (φ : QVector 8) : Random (Bool × QVector 8) :=
   Qmeasure_single_qubit φ (|0⟩⟨0| ⨂ I₂ ⨂ I₂) (|1⟩⟨1| ⨂ I₂ ⨂ I₂)
 
 @[simp]
 noncomputable
-def Qmeasure₃₁ (φ : QVector 8) : RandM (Bool × QVector 8) :=
+def Qmeasure₃₁ (φ : QVector 8) : Random (Bool × QVector 8) :=
   Qmeasure_single_qubit φ (I₂ ⨂ |0⟩⟨0| ⨂ I₂) (I₂ ⨂ |1⟩⟨1| ⨂ I₂)
 
 @[simp]
 noncomputable
-def Zmeasure (φ : Qubit) : RandM (Qubit) := do
+def Zmeasure (φ : Qubit) : Random (Qubit) := do
   let result ← Qmeasure_single_qubit φ |0⟩⟨0| |1⟩⟨1|
   pure result.2
 
-def Qmeasure' (φ : Qubit) : RandM Qubit :=
+def Qmeasure' (φ : Qubit) : Random Qubit :=
   fun f => ‖φ.α‖ * f |0⟩ + ‖φ.β‖ * f |1⟩
 
 lemma zero_proj_phi {φ : Qubit} :
