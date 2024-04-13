@@ -2,7 +2,7 @@
 import Quantum.Basic
 
 theorem no_cloning :
-  ¬∃ (U : QMatrix 4 4), ∀ (φ : Qubit), |φ| = 1 → U * (φ ⊗ |0⟩) = φ ⊗ φ
+  ¬∃ (U : QMatrix 4 4), ∀ (φ : Qubit), |φ| = 1 → U * (φ ⨂ |0⟩) = φ ⨂ φ
   := by
     apply by_contradiction
     rw [not_not]
@@ -29,12 +29,12 @@ theorem no_cloning :
         else
           φ.β
     have eq_first_expansion (φ : Qubit) (hφ : |φ| = 1) :
-      U * (φ ⊗ |0⟩) = first_expansion φ
+      U * (φ ⨂ |0⟩) = first_expansion φ
       := by
         rw [h φ hφ, tens_self]
         rfl
     have eq_second_expansion (φ : Qubit) :
-      U * (φ ⊗ |0⟩) = second_expansion φ
+      U * (φ ⨂ |0⟩) = second_expansion φ
       := by
         nth_rw 1 [decompose_qubit_into_Z_basis φ]
         rw [
@@ -54,7 +54,7 @@ theorem no_cloning :
     have first_eq_second (φ : Qubit) (hφ : |φ| = 1) :
       first_expansion φ = second_expansion φ
       := calc
-        _ = U * (φ ⊗ |0⟩)         := (eq_first_expansion φ hφ).symm
+        _ = U * (φ ⨂ |0⟩)         := (eq_first_expansion φ hφ).symm
         _ = second_expansion φ    := eq_second_expansion φ
     specialize first_eq_second |+⟩ norm_ket_plus_eq_1
     unfold_let first_expansion second_expansion at first_eq_second
