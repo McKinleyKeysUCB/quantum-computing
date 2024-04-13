@@ -97,14 +97,14 @@ lemma add_tens {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix 
     simp
     rw [add_mul]
 
-lemma mul_tens {m₁ n₁ m₂ n₂ : ℕ} {s : ℂ} {A : QMatrix m₁ n₁} {B : QMatrix m₂ n₂} :
+lemma smul_tens {m₁ n₁ m₂ n₂ : ℕ} {s : ℂ} {A : QMatrix m₁ n₁} {B : QMatrix m₂ n₂} :
   (s • A) ⨂ B = s • (A ⨂ B)
   := by
     simp [tens, Pi.smul_def]
     apply funext₂
     intro i j
     ring
-lemma tens_mul {m₁ n₁ m₂ n₂ : ℕ} {s : ℂ} {A : QMatrix m₁ n₁} {B : QMatrix m₂ n₂} :
+lemma tens_smul {m₁ n₁ m₂ n₂ : ℕ} {s : ℂ} {A : QMatrix m₁ n₁} {B : QMatrix m₂ n₂} :
   A ⨂ (s • B) = s • (A ⨂ B)
   := by
     simp [tens, Pi.smul_def]
@@ -123,21 +123,11 @@ lemma decompose_qubit_into_Z_basis (φ : Qubit) :
       apply Fin.eq_zero
     rw [hj, ket0, ket1]
     by_cases hi : i = 0
-    · rw [
-        hi,
-        if_pos rfl,
-        if_neg zero_ne_one,
-      ]
+    · rw [hi]
       simp
-      congr
     · apply Fin.eq_one_of_neq_zero i at hi
-      rw [
-        hi,
-        if_neg one_ne_zero,
-        if_pos rfl,
-      ]
+      rw [hi]
       simp
-      congr
 
 lemma tens_self (φ : Qubit) :
   let α := φ 0 0
@@ -155,6 +145,31 @@ lemma tens_self (φ : Qubit) :
     intro α β
     rw [qubit_tens_qubit, pow_two, pow_two]
 
+
+
+@[simp]
+lemma H_ket0 :
+  H * |0⟩ = |+⟩
+  := by
+    unfold H ket0 ket_plus
+    rw [Matrix.smul_mul]
+    congr
+    apply Matrix.ext
+    intro i j
+    rw [Matrix.mul_apply]
+    simp
+
+@[simp]
+lemma H_ket1 :
+  H * |1⟩ = |-⟩
+  := by
+    unfold H ket1 ket_minus
+    rw [Matrix.smul_mul]
+    congr
+    apply Matrix.ext
+    intro i j
+    rw [Matrix.mul_apply]
+    simp
 
 
 /-

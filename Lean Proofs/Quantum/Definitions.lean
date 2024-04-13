@@ -21,7 +21,9 @@ def Qubit := QVector 2
 @[reducible]
 def Qubits (n : ℕ) := QVector (2 ^ n)
 
+@[reducible]
 def Qubit.α (φ : Qubit) := φ 0 0
+@[reducible]
 def Qubit.β (φ : Qubit) := φ 1 0
 
 @[simp]
