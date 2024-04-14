@@ -578,3 +578,46 @@ lemma proj_hermitian {m n : ℕ} {M : QMatrix m n} :
   QSquare.hermitian (M * M†)
   := by
     simp
+
+
+/-
+ - Unitaries
+ -/
+
+@[simp]
+lemma unitary_tens_unitary {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix m₂ n₂} (hA : A.unitary) (hB : B.unitary) :
+  (A ⨂ B).unitary
+  := by
+    unfold QMatrix.unitary
+    rw [adjoint_tens, tens_mul_tens, hA, hB]
+    unfold tens
+    apply Matrix.ext
+    intro i j
+    simp [Matrix.one_apply, Fin.modNat, Fin.divNat]
+    by_cases h : i = j
+    · rw [if_pos]
+      simp [h]
+      exact congrFun (congrArg HMod.hMod (congrArg Fin.val h)) n₂
+    · simp [*]
+      intro h'
+      contrapose h
+      rw [not_not] at h ⊢
+      rw [Fin.ext_iff, ← Nat.div_add_mod ↑i n₂, ← Nat.div_add_mod ↑j n₂]
+      simp [*]
+
+lemma ket00_unitary :
+  |00⟩.unitary
+  := by
+    simp only [← ket0_tens_ket0_eq_ket00, unitary_tens_unitary, ket0_unitary]
+lemma ket01_unitary :
+  |01⟩.unitary
+  := by
+    simp only [← ket0_tens_ket1_eq_ket01, unitary_tens_unitary, ket0_unitary, ket1_unitary]
+lemma ket10_unitary :
+  |10⟩.unitary
+  := by
+    simp only [← ket1_tens_ket0_eq_ket10, unitary_tens_unitary, ket0_unitary, ket1_unitary]
+lemma ket11_unitary :
+  |11⟩.unitary
+  := by
+    simp only [← ket1_tens_ket1_eq_ket11, unitary_tens_unitary, ket1_unitary]
