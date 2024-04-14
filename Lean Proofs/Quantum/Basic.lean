@@ -241,28 +241,82 @@ lemma Fin.mod_eq_mod_mod_cast {a b c : ℕ} {i : Fin (a * b * c)} {h : (a * b * 
 lemma tens_assoc {a b c d e f : ℕ} {A : QMatrix a b} {B : QMatrix c d} {C : QMatrix e f} :
   (A ⨂ B) ⨂ C = cast_matrix (A ⨂ (B ⨂ C))
   := by
-    -- unfold tens
     apply Matrix.ext
     intro i j
     simp
-    rw [QMatrix.cast_apply (by ring) (by ring), Matrix.of_apply]
-    rw [mul_assoc]
+    rw [QMatrix.cast_apply (by ring) (by ring), Matrix.of_apply, mul_assoc]
     congr 1
     · congr 1 <;> exact Fin.div_div_eq_div_cast
     congr 1
     · congr 1 <;> exact Fin.mod_div_eq_div_mod_cast
     congr 1 <;> exact Fin.mod_eq_mod_mod_cast
 
-lemma zero_tens {m₁ n₁ m₂ n₂ : ℕ} {M : QMatrix m₂ n₂} :
-  (0 : QMatrix m₁ n₁) ⨂ M = 0
-  := by
-    simp
-    rfl
 lemma tens_zero {m₁ n₁ m₂ n₂ : ℕ} {M : QMatrix m₁ n₁} :
   M ⨂ (0 : QMatrix m₂ n₂) = 0
   := by
     simp
     rfl
+lemma zero_tens {m₁ n₁ m₂ n₂ : ℕ} {M : QMatrix m₂ n₂} :
+  (0 : QMatrix m₁ n₁) ⨂ M = 0
+  := by
+    simp
+    rfl
+
+lemma tens_one {m n : ℕ} {M : QMatrix m n} :
+  M ⨂ (1 : QSquare 1) = cast_matrix M
+  := by
+    apply Matrix.ext
+    intro i j
+    simp only [tens, Matrix.of_apply]
+    have hi : Fin.modNat i = 0 := by
+      apply Fin.ext
+      simp
+    have hj : Fin.modNat j = 0 := by
+      apply Fin.ext
+      simp
+    rw [
+      hi,
+      hj,
+      Matrix.one_apply,
+      if_pos rfl,
+      mul_one,
+      QMatrix.cast_apply (mul_one _).symm (mul_one _).symm,
+      Fin.divNat,
+      Fin.divNat,
+    ]
+    simp
+    congr
+
+lemma one_tens {m n : ℕ} {M : QMatrix m n} :
+  (1 : QSquare 1) ⨂ M = cast_matrix M
+  := by
+    apply Matrix.ext
+    intro i j
+    simp only [tens, Matrix.of_apply]
+    have hi : Fin.divNat i = 0 := by
+      apply Fin.ext
+      simp
+    have hj : Fin.divNat j = 0 := by
+      apply Fin.ext
+      simp
+    rw [
+      hi,
+      hj,
+      Matrix.one_apply,
+      if_pos rfl,
+      one_mul,
+      QMatrix.cast_apply (one_mul _).symm (one_mul _).symm,
+    ]
+    unfold Fin.modNat
+    rcases i with ⟨i, hi'⟩
+    rw [one_mul m] at hi'
+    rcases j with ⟨j, hj'⟩
+    rw [one_mul n] at hj'
+    congr <;> {
+      apply Nat.mod_eq_of_lt
+      dsimp only
+      assumption
+    }
 
 lemma CNOT_mul_ket0_tens {φ : Qubit} :
   CNOT * (|0⟩ ⨂ φ) = |0⟩ ⨂ φ
