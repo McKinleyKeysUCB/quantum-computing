@@ -225,6 +225,18 @@ def Qmeasure_single_qubit {n : ℕ} (φ : QVector n) (M₀ M₁ : QSquare n) : R
   let φ₁ := Complex.ofReal' (1 / p₁.sqrt) • (M₁ * φ)
   fun f => p₀ * f ⟨false, φ₀⟩ + p₁ * f ⟨true, φ₁⟩
 
+noncomputable
+def Qmeasure_single_qubit_rng {n : ℕ} (φ : QVector n) (M₀ M₁ : QSquare n) (rng : RNG) : (Bool × QVector n) × RNG :=
+  let p₀ : [0,1] := (M₀ * φ)† * (M₀ * φ)
+  let φ₀ := Complex.ofReal' (1 / p₀.sqrt) • (M₀ * φ)
+  let p₁ : [0,1] := (M₁ * φ)† * (M₁ * φ)
+  let φ₁ := Complex.ofReal' (1 / p₁.sqrt) • (M₁ * φ)
+  let ⟨result, rng⟩ := rng.flip p₀
+  if result then
+    ⟨⟨false, φ₀⟩, rng⟩
+  else
+    ⟨⟨true, φ₁⟩, rng⟩
+
 @[simp]
 noncomputable
 def Qmeasure₃₀ (φ : QVector 8) : Random (Bool × QVector 8) :=
@@ -234,6 +246,14 @@ def Qmeasure₃₀ (φ : QVector 8) : Random (Bool × QVector 8) :=
 noncomputable
 def Qmeasure₃₁ (φ : QVector 8) : Random (Bool × QVector 8) :=
   Qmeasure_single_qubit φ (I₂ ⨂ |0⟩⟨0| ⨂ I₂) (I₂ ⨂ |1⟩⟨1| ⨂ I₂)
+
+noncomputable
+def Qmeasure₃₀_rng (φ : QVector 8) (rng : RNG) : (Bool × QVector 8) × RNG :=
+  Qmeasure_single_qubit_rng φ (|0⟩⟨0| ⨂ I₂ ⨂ I₂) (|1⟩⟨1| ⨂ I₂ ⨂ I₂) rng
+
+noncomputable
+def Qmeasure₃₁_rng (φ : QVector 8) (rng : RNG) : (Bool × QVector 8) × RNG :=
+  Qmeasure_single_qubit_rng φ (I₂ ⨂ |0⟩⟨0| ⨂ I₂) (I₂ ⨂ |1⟩⟨1| ⨂ I₂) rng
 
 @[simp]
 noncomputable

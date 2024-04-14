@@ -8,8 +8,14 @@ noncomputable
 def Qmeasure₀ := Qmeasure₃₀
 noncomputable
 def Qmeasure₁ := Qmeasure₃₁
+noncomputable
+def Qmeasure₀_rng := Qmeasure₃₀_rng
+noncomputable
+def Qmeasure₁_rng := Qmeasure₃₁_rng
 
 def extract₂ (state : Qubits 3) : Random Qubit := do
+  sorry
+def extract₂_rng (state : Qubits 3) (rng : RNG) : Qubit × RNG := do
   sorry
 
 def entangle :
@@ -39,7 +45,21 @@ def entangle' :
     ]
 
 noncomputable
-def teleport (φ : Qubit) : Random Qubit := do
+def teleport_random (φ : Qubit) : Random Qubit := do
+  let state₀ := φ ⨂ |00⟩
+  let state₁ := CNOT₂₁ * (I₂ ⨂ I₂ ⨂ H) * state₀
+  let state₂ := (H ⨂ I₂ ⨂ I₂) * CNOT₀₁ * state₁
+  let ⟨a, state₃⟩ ← Qmeasure₀ state₂
+  let ⟨b, state₄⟩ ← Qmeasure₁ state₃
+  let mut result ← extract₂ state₄
+  if a then
+    result := X * result
+  if b then
+    result := Z * result
+  pure result
+
+noncomputable
+def teleport_rng (φ : Qubit) (rng : RNG) : Qubit × RNG :=
   let α := φ.α
   let β := φ.β
   let state₀ := φ ⨂ |00⟩
@@ -256,22 +276,20 @@ def teleport (φ : Qubit) : Random Qubit := do
         add_sub_assoc,
         add_sub_assoc,
       ]
-  let ⟨a, state₃⟩ ← Qmeasure₀ state₂
-  let ⟨b, state₄⟩ ← Qmeasure₁ state₃
-  let mut final ← extract₂ state₄
-  if a then
-    final := X * final
-  if b then
-    final := Z * final
-  pure final
+  let ⟨⟨a, state₃⟩, rng⟩ := Qmeasure₀_rng state₂ rng
+  let ⟨⟨b, state₄⟩, rng⟩ := Qmeasure₁_rng state₃ rng
+  let ⟨result₀, rng⟩ := extract₂_rng state₄ rng
+  let result₁ := if a then X * result₀ else result₀
+  let result₂ := if b then Z * result₁ else result₁
+  ⟨result₂, rng⟩
 
-def mymul (a b : ℕ) := a * b
-def myadd (a b : ℕ) := a + b
-
-def blah (n : ℕ) :=
-  let a := mymul n 2
-  let b := myadd a 1
-  myadd a b
+-- def mymul (a b : ℕ) := a * b
+-- def myadd (a b : ℕ) := a + b
+-- 
+-- def blah (n : ℕ) :=
+--   let a := mymul n 2
+--   let b := myadd a 1
+--   myadd a b
 
 -- example {n : ℕ} :
 --   blah n = myadd (mymul 4 n) 1
@@ -288,9 +306,9 @@ def blah (n : ℕ) :=
     -- sorry
 
 theorem quantum_teleportation {φ : Qubit} :
-  ℙ[teleport φ = φ] = 1
+  ℙ[teleport_random φ = φ] = 1
   := by
-    unfold teleport probability_equals does_equal
+    unfold teleport_random probability_equals does_equal
     -- simp [Qmeasure₀, I₂, X, Z, CNOT₀₁, CNOT₂₁]
     
     conv =>
