@@ -6,6 +6,31 @@ import Mathlib.Data.Real.Basic
 def Prob := ℝ
 notation "[0,1]" => Prob
 
+
+/-
+ - Random Number Generator
+ -/
+
+structure RNG where
+  f : ℕ → [0,1]
+  n : ℕ
+
+def RNG.next (rng : RNG) : [0,1] × RNG :=
+  let result := rng.f rng.n
+  let new_rng := {f := rng.f, n := rng.n.succ}
+  ⟨result, new_rng⟩
+
+-- Returns `true` with probability `p` and `false` with probability `1 - p`.
+noncomputable
+def RNG.flip (rng : RNG) (p : [0,1]) : Bool × RNG :=
+  let ⟨result, rng⟩ := rng.next
+  ⟨result < p, rng⟩
+
+
+/-
+ - Random
+ -/
+
 @[reducible, simp]
 def Random (α : Type) := (α → [0,1]) → [0,1]
 
@@ -121,5 +146,17 @@ lemma Pr_two_flips_eq_2 :
   ℙ[two_flips = 2] = 1/4
   := by
     unfold two_flips
-    simp
-    norm_num
+    dsimp only [instMonadRandom, Random, Random.bind,
+      Random.pure]
+    unfold probability_equals
+    unfold Random.bind
+    conv =>
+      arg 1
+      args
+      dsimp
+      unfold Random.bind
+      
+    sorry
+    -- unfold two_flips
+    -- simp
+    -- norm_num
