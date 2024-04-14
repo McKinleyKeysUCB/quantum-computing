@@ -59,6 +59,35 @@ lemma bra0_mul_ket1 :
     intro i j
     simp [Matrix.mul_apply]
 
+lemma proj_mul_self {φ : Qubit} (h : φ.unitary) :
+  φ * φ† * φ = φ
+  := by
+    rw [Matrix.mul_assoc, h, Matrix.mul_one]
+
+@[simp]
+lemma proj0_mul_ket0 :
+  |0⟩ * ⟨0| * |0⟩ = |0⟩
+  :=
+    proj_mul_self ket0_unitary
+
+@[simp]
+lemma proj0_mul_ket1 :
+  |0⟩ * ⟨0| * |1⟩ = 0
+  := by
+    rw [Matrix.mul_assoc, bra0_mul_ket1, Matrix.mul_zero]
+
+@[simp]
+lemma proj1_mul_ket0 :
+  |1⟩ * ⟨1| * |0⟩ = 0
+  := by
+    rw [Matrix.mul_assoc, bra1_mul_ket0, Matrix.mul_zero]
+
+@[simp]
+lemma proj1_mul_ket1 :
+  |1⟩ * ⟨1| * |1⟩ = |1⟩
+  :=
+    proj_mul_self ket1_unitary
+
 lemma ket_plus_eq_ket0_plus_ket1 :
   |+⟩ = (1/√2) • (|0⟩ + |1⟩)
   := by

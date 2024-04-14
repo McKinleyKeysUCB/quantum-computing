@@ -15,7 +15,7 @@ def Qmeasure₁_rng := Qmeasure₃₁_rng
 
 def extract₂ (state : Qubits 3) : Random Qubit := do
   sorry
-def extract₂_rng (state : Qubits 3) (rng : RNG) : Qubit × RNG := do
+def extract₂_rng (state : Qubits 3) (rng : RNG) : Qubit × RNG :=
   sorry
 
 def entangle :
@@ -276,7 +276,45 @@ def teleport_rng (φ : Qubit) (rng : RNG) : Qubit × RNG :=
         add_sub_assoc,
         add_sub_assoc,
       ]
-  let ⟨⟨a, state₃⟩, rng⟩ := Qmeasure₀_rng state₂ rng
+  
+  /-
+   - Unfortunately we can't use destructuring syntax like
+   -   let ⟨⟨a, state₃⟩, rng⟩ := Qmeasure₀_rng state₂ rng
+   - because then Lean won't remember the definitions of `a` and `state₃`.
+   - So we have to manually unpack the tuple.
+   -/
+  let first_measurement := Qmeasure₀_rng state₂ rng
+  let a := first_measurement.1.1
+  let state₃ := first_measurement.1.2
+  let rng := first_measurement.2
+  
+  have : (|0⟩⟨0| ⨂ I₂ ⨂ I₂) * state₂ = (1/2 : ℂ) • (|00⟩ ⨂ (α•|0⟩ + β•|1⟩) + |01⟩ ⨂ (β•|0⟩ + α•|1⟩)) := by
+    rw [this, Matrix.mul_smul]
+    congr 1
+    simp only [Matrix.mul_add, tens_mul_tens, I₂, Matrix.one_mul, ← ket0_tens_ket0_eq_ket00, ← ket0_tens_ket1_eq_ket01, ← ket1_tens_ket0_eq_ket10, ← ket1_tens_ket1_eq_ket11]
+    simp only [tens_mul_tens, proj0_mul_ket0, proj0_mul_ket1, Matrix.one_mul, zero_tens, add_zero]
+  have : (|1⟩⟨1| ⨂ I₂ ⨂ I₂) * state₂ = (1/2 : ℂ) • (|10⟩ ⨂ (α•|0⟩ - β•|1⟩) + |11⟩ ⨂ (-β•|0⟩ + α•|1⟩)) := by
+    rw [this, Matrix.mul_smul]
+    congr 1
+    simp only [Matrix.mul_add, tens_mul_tens, I₂, Matrix.one_mul, ← ket0_tens_ket0_eq_ket00, ← ket0_tens_ket1_eq_ket01, ← ket1_tens_ket0_eq_ket10, ← ket1_tens_ket1_eq_ket11]
+    simp only [tens_mul_tens, proj1_mul_ket0, proj1_mul_ket1, Matrix.one_mul, zero_tens, add_zero]
+  
+  have : state₃ =
+    if a then
+      (1/√2) • (|10⟩ ⨂ (α•|0⟩ - β•|1⟩) + |11⟩ ⨂ (-β•|0⟩ + α•|1⟩))
+    else
+      (1/√2) • (|00⟩ ⨂ (α•|0⟩ + β•|1⟩) + |01⟩ ⨂ (β•|0⟩ + α•|1⟩))
+  := by
+    
+    unfold_let state₃ first_measurement
+    unfold Qmeasure₀_rng Qmeasure₃₀_rng Qmeasure_single_qubit_rng
+    let zero_proj := (|0⟩⟨0| ⨂ I₂ ⨂ I₂) * state₂
+    have : zero_proj * state₂ = 
+    have : QMatrix.toReal (zero_proj† * zero_proj) = 1/2 := by
+      
+      sorry
+    rw [this]
+    sorry
   let ⟨⟨b, state₄⟩, rng⟩ := Qmeasure₁_rng state₃ rng
   let ⟨result₀, rng⟩ := extract₂_rng state₄ rng
   let result₁ := if a then X * result₀ else result₀
