@@ -42,10 +42,21 @@ noncomputable
 def teleport (φ : Qubit) : Random Qubit := do
   let state₀ := φ ⨂ |00⟩
   let state₁ := CNOT₂₁ * (I₂ ⨂ I₂ ⨂ H) * state₀
-  have : state₁ = φ ⨂ (1/√2)•(|00⟩ + |11⟩) := by
-    unfold_let state₁
-    
-    sorry
+  have : state₁ = φ ⨂ |Φ+⟩ := by
+    unfold_let state₁ state₀
+    unfold CNOT₂₁
+    rw [tens_assoc]
+    -- Get rid of the cast
+    change I₂ ⨂ CNOT' * (I₂ ⨂ (I₂ ⨂ H)) * (φ ⨂ |00⟩) = φ ⨂ |Φ+⟩
+    rw [
+      tens_mul_tens,
+      I₂,
+      Matrix.mul_one,
+      tens_mul_tens,
+      Matrix.one_mul,
+      ← I₂,
+      entangle,
+    ]
   let state₂ := (H ⨂ I₂ ⨂ I₂) * CNOT₀₁ * state₁
   let ⟨a, state₃⟩ ← Qmeasure₀ state₂
   let ⟨b, state₄⟩ ← Qmeasure₁ state₃
@@ -63,13 +74,6 @@ def blah (n : ℕ) :=
   let a := mymul n 2
   let b := myadd a 1
   myadd a b
-
-def binary_search (arr : List ℕ) (key : ℕ) : Bool :=
-  let mid := (arr.length / 2)
-  if arr.length = 0 then false
-  else if arr.get mid = key then true
-  else if key < arr.get mid then binary_search arr.take mid key
-  else binary_search arr.drop (mid + 1) key
 
 -- example {n : ℕ} :
 --   blah n = myadd (mymul 4 n) 1
@@ -94,7 +98,7 @@ theorem quantum_teleportation {φ : Qubit} :
     conv =>
       lhs
       arg 0
-      intro state₀
+      -- intro state₀
     
       -- arg 0
       -- intro state₀
