@@ -194,6 +194,65 @@ lemma tens_mul_tens {a₁ b₁ c₁ a₂ b₂ c₂ : ℕ} {A : QMatrix a₁ b₁
     
     sorry
 
+/-
+ - Use this notation to help Lean understand that two matrix types are the same. For example, Lean doesn't automatically understand that `QMatrix (2^3) (2^3)` and `QMatrix 8 8` are the same type. This example produces an error:
+ - example (A : QMatrix 8 8) (B : QMatrix (2^3) (2^3)) :
+     A = B
+     := by
+       sorry
+ - To fix this error, we can write `A = cast_matrix B` instead.
+ -/
+notation "cast_matrix" M => cast (by ring_nf) M
+
+lemma cast_apply_eq_apply' {α α' β β' γ : Type} {f : α → β → γ} {a : α} {b : β} {a' : α'} {b' : β'} (ha : HEq a' a) (hb : HEq b' b) {h : (α → β → γ) = (α' → β' → γ)} :
+  cast h f a' b' = f a b
+  := by
+    cases ha
+    cases hb
+    rfl
+
+lemma QMatrix.cast_apply {m₁ n₁ m₂ n₂ : ℕ} {i : Fin m₂} {j : Fin n₂} {h : QMatrix m₁ n₁ = QMatrix m₂ n₂} {M : QMatrix m₁ n₁} (hm : m₁ = m₂) (hn : n₁ = n₂) :
+  (cast h M) i j = M (Fin.cast hm.symm i) (Fin.cast hn.symm j)
+  := by
+    rw [cast_apply_eq_apply']
+    · exact (Fin.heq_ext_iff (id hm.symm)).mpr rfl
+    · exact (Fin.heq_ext_iff (id hn.symm)).mpr rfl
+
+lemma Fin.div_div_eq_div_cast {a b c : ℕ} {i : Fin (a * b * c)} {h : (a * b * c) = (a * (b * c))} :
+  Fin.divNat (Fin.divNat i) = Fin.divNat (Fin.cast h i)
+  := by
+    unfold divNat
+    simp
+    rw [Nat.div_div_eq_div_mul, mul_comm c b]
+
+lemma Fin.mod_div_eq_div_mod_cast {a b c : ℕ} {i : Fin (a * b * c)} {h : (a * b * c) = (a * (b * c))} :
+  Fin.modNat (Fin.divNat i) = Fin.divNat (Fin.modNat (Fin.cast h i))
+  := by
+    unfold divNat modNat
+    simp
+    rw [Nat.mod_mul_left_div_self]
+
+lemma Fin.mod_eq_mod_mod_cast {a b c : ℕ} {i : Fin (a * b * c)} {h : (a * b * c) = (a * (b * c))} :
+  Fin.modNat i = Fin.modNat (Fin.modNat (Fin.cast h i))
+  := by
+    unfold modNat
+    simp
+
+lemma tens_assoc {a b c d e f : ℕ} {A : QMatrix a b} {B : QMatrix c d} {C : QMatrix e f} :
+  (A ⨂ B) ⨂ C = cast_matrix (A ⨂ (B ⨂ C))
+  := by
+    -- unfold tens
+    apply Matrix.ext
+    intro i j
+    simp
+    rw [QMatrix.cast_apply (by ring) (by ring), Matrix.of_apply]
+    rw [mul_assoc]
+    congr 1
+    · congr 1 <;> exact Fin.div_div_eq_div_cast
+    congr 1
+    · congr 1 <;> exact Fin.mod_div_eq_div_mod_cast
+    congr 1 <;> exact Fin.mod_eq_mod_mod_cast
+
 lemma zero_tens {m₁ n₁ m₂ n₂ : ℕ} {M : QMatrix m₂ n₂} :
   (0 : QMatrix m₁ n₁) ⨂ M = 0
   := by
