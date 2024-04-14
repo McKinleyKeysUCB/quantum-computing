@@ -6,6 +6,11 @@ import Mathlib.Data.Complex.Basic
 import Quantum.Definitions
 import Quantum.Lemmas
 
+lemma one_div_sqrt_two_sq :
+  (1/√2) * (1/√2) = 1/2
+  := by
+    sorry
+
 lemma norm_ket0_eq_1 :
   | |0⟩ | = 1
   := by
@@ -111,6 +116,7 @@ lemma qubit_tens_qubit (a b : Qubit) :
     simp [i3, hj]
     congr
 
+@[simp]
 lemma ket0_tens_ket0_eq_ket00 :
   |0⟩ ⨂ |0⟩ = |00⟩
   := by
@@ -118,6 +124,27 @@ lemma ket0_tens_ket0_eq_ket00 :
     intro i j
     unfold ket0 ket00
     simp
+@[simp]
+lemma ket0_tens_ket1_eq_ket01 :
+  |0⟩ ⨂ |1⟩ = |01⟩
+  := by
+    rw [qubit_tens_qubit, ← Matrix.ext_iff]
+    intro i j
+    unfold ket0 ket1 ket01
+    simp
+    intro i'
+    rw [if_neg]
+    norm_num [i']
+@[simp]
+lemma ket1_tens_ket0_eq_ket10 :
+  |1⟩ ⨂ |0⟩ = |10⟩
+  := by
+    rw [qubit_tens_qubit, ← Matrix.ext_iff]
+    intro i j
+    unfold ket0 ket1 ket10
+    simp
+    by_cases hi : i = 2 <;> simp [hi]
+@[simp]
 lemma ket1_tens_ket1_eq_ket11 :
   |1⟩ ⨂ |1⟩ = |11⟩
   := by
@@ -126,6 +153,7 @@ lemma ket1_tens_ket1_eq_ket11 :
     simp only [Fin.isValue, zero_ne_one, ↓reduceIte, mul_zero, mul_one, Matrix.of_apply]
     apply Fin.bash4 <;> simp [*]
 
+@[simp]
 lemma tens_add {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix m₁ n₁} {C : QMatrix m₂ n₂} :
   C ⨂ (A + B) = C ⨂ A + C ⨂ B
   := by
@@ -134,6 +162,7 @@ lemma tens_add {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix 
     rw [Matrix.add_apply, tens, tens, tens]
     simp
     rw [mul_add]
+@[simp]
 lemma add_tens {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix m₁ n₁} {C : QMatrix m₂ n₂} :
   (A + B) ⨂ C = A ⨂ C + B ⨂ C
   := by
@@ -142,7 +171,26 @@ lemma add_tens {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix 
     rw [Matrix.add_apply, tens, tens, tens]
     simp
     rw [add_mul]
+@[simp]
+lemma tens_sub {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix m₁ n₁} {C : QMatrix m₂ n₂} :
+  C ⨂ (A - B) = C ⨂ A - C ⨂ B
+  := by
+    apply Matrix.ext
+    intro i j
+    rw [Matrix.sub_apply, tens, tens, tens]
+    simp
+    rw [mul_sub]
+@[simp]
+lemma sub_tens {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix m₁ n₁} {C : QMatrix m₂ n₂} :
+  (A - B) ⨂ C = A ⨂ C - B ⨂ C
+  := by
+    apply Matrix.ext
+    intro i j
+    rw [Matrix.sub_apply, tens, tens, tens]
+    simp
+    rw [sub_mul]
 
+@[simp]
 lemma smul_tens {m₁ n₁ m₂ n₂ : ℕ} {s : ℂ} {A : QMatrix m₁ n₁} {B : QMatrix m₂ n₂} :
   (s • A) ⨂ B = s • (A ⨂ B)
   := by
@@ -150,6 +198,7 @@ lemma smul_tens {m₁ n₁ m₂ n₂ : ℕ} {s : ℂ} {A : QMatrix m₁ n₁} {B
     apply funext₂
     intro i j
     ring
+@[simp]
 lemma tens_smul {m₁ n₁ m₂ n₂ : ℕ} {s : ℂ} {A : QMatrix m₁ n₁} {B : QMatrix m₂ n₂} :
   A ⨂ (s • B) = s • (A ⨂ B)
   := by
@@ -204,7 +253,7 @@ lemma tens_mul_tens {a₁ b₁ c₁ a₂ b₂ c₂ : ℕ} {A : QMatrix a₁ b₁
  -/
 notation "cast_matrix" M => cast (by ring_nf) M
 
-lemma cast_apply_eq_apply' {α α' β β' γ : Type} {f : α → β → γ} {a : α} {b : β} {a' : α'} {b' : β'} (ha : HEq a' a) (hb : HEq b' b) {h : (α → β → γ) = (α' → β' → γ)} :
+lemma cast_apply_eq_apply {α α' β β' γ : Type} {f : α → β → γ} {a : α} {b : β} {a' : α'} {b' : β'} (ha : HEq a' a) (hb : HEq b' b) {h : (α → β → γ) = (α' → β' → γ)} :
   cast h f a' b' = f a b
   := by
     cases ha
@@ -214,7 +263,7 @@ lemma cast_apply_eq_apply' {α α' β β' γ : Type} {f : α → β → γ} {a :
 lemma QMatrix.cast_apply {m₁ n₁ m₂ n₂ : ℕ} {i : Fin m₂} {j : Fin n₂} {h : QMatrix m₁ n₁ = QMatrix m₂ n₂} {M : QMatrix m₁ n₁} (hm : m₁ = m₂) (hn : n₁ = n₂) :
   (cast h M) i j = M (Fin.cast hm.symm i) (Fin.cast hn.symm j)
   := by
-    rw [cast_apply_eq_apply']
+    rw [cast_apply_eq_apply]
     · exact (Fin.heq_ext_iff (id hm.symm)).mpr rfl
     · exact (Fin.heq_ext_iff (id hn.symm)).mpr rfl
 
@@ -238,6 +287,7 @@ lemma Fin.mod_eq_mod_mod_cast {a b c : ℕ} {i : Fin (a * b * c)} {h : (a * b * 
     unfold modNat
     simp
 
+@[simp]
 lemma tens_assoc {a b c d e f : ℕ} {A : QMatrix a b} {B : QMatrix c d} {C : QMatrix e f} :
   (A ⨂ B) ⨂ C = cast_matrix (A ⨂ (B ⨂ C))
   := by
@@ -251,17 +301,20 @@ lemma tens_assoc {a b c d e f : ℕ} {A : QMatrix a b} {B : QMatrix c d} {C : QM
     · congr 1 <;> exact Fin.mod_div_eq_div_mod_cast
     congr 1 <;> exact Fin.mod_eq_mod_mod_cast
 
+@[simp]
 lemma tens_zero {m₁ n₁ m₂ n₂ : ℕ} {M : QMatrix m₁ n₁} :
   M ⨂ (0 : QMatrix m₂ n₂) = 0
   := by
     simp
     rfl
+@[simp]
 lemma zero_tens {m₁ n₁ m₂ n₂ : ℕ} {M : QMatrix m₂ n₂} :
   (0 : QMatrix m₁ n₁) ⨂ M = 0
   := by
     simp
     rfl
 
+@[simp]
 lemma tens_one {m n : ℕ} {M : QMatrix m n} :
   M ⨂ (1 : QSquare 1) = cast_matrix M
   := by
@@ -287,6 +340,7 @@ lemma tens_one {m n : ℕ} {M : QMatrix m n} :
     simp
     congr
 
+@[simp]
 lemma one_tens {m n : ℕ} {M : QMatrix m n} :
   (1 : QSquare 1) ⨂ M = cast_matrix M
   := by
@@ -318,6 +372,7 @@ lemma one_tens {m n : ℕ} {M : QMatrix m n} :
       assumption
     }
 
+@[simp]
 lemma CNOT_mul_ket0_tens {φ : Qubit} :
   CNOT * (|0⟩ ⨂ φ) = |0⟩ ⨂ φ
   := by
@@ -337,6 +392,7 @@ lemma CNOT_mul_ket0_tens {φ : Qubit} :
       Matrix.one_mul,
     ]
     simp
+@[simp]
 lemma CNOT_mul_ket1_tens {φ : Qubit} :
   CNOT * (|1⟩ ⨂ φ) = |1⟩ ⨂ (X * φ)
   := by
@@ -355,6 +411,7 @@ lemma CNOT_mul_ket1_tens {φ : Qubit} :
     ]
     simp
 
+@[simp]
 lemma X_mul_ket0 :
   X * |0⟩ = |1⟩
   := by
@@ -364,6 +421,7 @@ lemma X_mul_ket0 :
       rw [Matrix.mul_apply]
       simp
     }
+@[simp]
 lemma X_mul_ket1 :
   X * |1⟩ = |0⟩
   := by
@@ -410,7 +468,7 @@ lemma tens_self (φ : Qubit) :
 
 
 @[simp]
-lemma H_ket0 :
+lemma H_mul_ket0 :
   H * |0⟩ = |+⟩
   := by
     unfold H ket0 ket_plus
@@ -422,7 +480,7 @@ lemma H_ket0 :
     simp
 
 @[simp]
-lemma H_ket1 :
+lemma H_mul_ket1 :
   H * |1⟩ = |-⟩
   := by
     unfold H ket1 ket_minus
