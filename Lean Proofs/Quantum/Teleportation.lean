@@ -526,11 +526,30 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
       rfl
     }
   
+  
   /-
    - X Gate
    -/
   
-  let result₁ := if a then X * result₀ else result₀
+  let result₁ := if b then X * result₀ else result₀
+  
+  have hresult₁ : result₁ =
+    if a then
+      α•|0⟩ + (-β)•|1⟩
+    else
+      α•|0⟩ + β•|1⟩
+  := by
+    unfold_let result₁
+    rw [hresult₀]
+    by_cases hb : b <;> {
+      simp only [if_pos, if_neg, hb, if_false]
+      try rw [apply_ite (fun q : Qubit => X * q)]
+      congr 1 <;> {
+        try rw [X_mul_qubit']
+        -- All but one of the goals should be closed by now
+        try rw [neg_smul, ← sub_eq_add_neg]
+      }
+    }
   
   
   /-
@@ -540,7 +559,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
   let result₂ := if b then Z * result₁ else result₁
   
   
-  ⟨result₂, rng₃⟩
+  ⟨result₂, rng₂⟩
 
 -- def mymul (a b : ℕ) := a * b
 -- def myadd (a b : ℕ) := a + b
