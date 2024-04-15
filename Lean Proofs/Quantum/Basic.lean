@@ -637,6 +637,13 @@ lemma one_div_sqrt_half_mul_half :
     simp
     rw [← division_def, Real.sqrt_div_self]
 
+lemma one_div_sqrt_half_mul_one_div_sqrt_two :
+  ↑(1 / Real.sqrt (1 / 2)) * (1 / Complex.ofReal (Real.sqrt 2)) = 1
+  := by
+    simp only [one_div, Real.sqrt_inv, div_inv_eq_mul, one_mul, Complex.ofReal_eq_coe, ne_eq,
+      Complex.ofReal_eq_zero, Nat.ofNat_nonneg, Real.sqrt_eq_zero, OfNat.ofNat_ne_zero,
+      not_false_eq_true, mul_inv_cancel]
+
 lemma sqrt_two_div_two_sq :
   Real.sqrt 2 / 2 * (Real.sqrt 2 / 2) = 1 / 2
   := by

@@ -460,35 +460,36 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
         norm_num
         exact sqrt_two_div_two_sq
       }
-  have ha : a = (rng.flip (1/2)).1 := by
-    -- unfold_let a first_measurement
-    -- unfold Qmeasure₀_rng Qmeasure₃₀_rng Qmeasure_single_qubit_rng
-    -- simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
-    -- simp only [apply_ite Prod.fst, apply_ite Prod.snd]
-    -- rw [if_true_false]
-    sorry
-  have : state₃ =
+  have hb : b = (rng₁.flip (1/2)).1 := by
+    unfold_let b second_measurement
+    unfold Qmeasure₁_rng Qmeasure₃₁_rng Qmeasure_single_qubit_rng
+    simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
+    simp only [apply_ite Prod.fst, apply_ite Prod.snd]
+    rw [if_true_false]
+  have hstate₄ : state₄ =
     if a then
-      (1/√2) • (|10⟩ ⨂ (α•|0⟩ - β•|1⟩) + |11⟩ ⨂ (-β•|0⟩ + α•|1⟩))
+      if b then
+        |11⟩ ⨂ (-β•|0⟩ + α•|1⟩)
+      else
+        |10⟩ ⨂ (α•|0⟩ - β•|1⟩)
     else
-      (1/√2) • (|00⟩ ⨂ (α•|0⟩ + β•|1⟩) + |01⟩ ⨂ (β•|0⟩ + α•|1⟩))
+      if b then
+        |01⟩ ⨂ (β•|0⟩ + α•|1⟩)
+      else
+        |00⟩ ⨂ (α•|0⟩ + β•|1⟩)
   := by
-    -- unfold_let state₃
-    -- unfold_let first_measurement at a ⊢
-    -- unfold Qmeasure₀_rng Qmeasure₃₀_rng Qmeasure_single_qubit_rng
-    -- simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
-    -- simp only [apply_ite Prod.fst, apply_ite Prod.snd]
-    -- rw [← ha]
-    -- congr 1
-    -- · unfold_let proj1 at hproj1
-    --   rw [hproj1, smul_smul]
-    --   congr 1
-    --   exact one_div_sqrt_half_mul_half
-    -- · unfold_let proj0 at hproj0
-    --   rw [hproj0, smul_smul]
-    --   congr 1
-    --   exact one_div_sqrt_half_mul_half
-    sorry
+    unfold_let state₄
+    unfold_let second_measurement at b ⊢
+    unfold Qmeasure₁_rng Qmeasure₃₁_rng Qmeasure_single_qubit_rng
+    simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
+    simp only [apply_ite Prod.fst, apply_ite Prod.snd]
+    rw [← hb]
+    unfold_let proj0 at hproj0
+    unfold_let proj1 at hproj1
+    by_cases ha : a <;> {
+      simp only [if_pos, if_neg, ha, if_false]
+      congr 1 <;> simp only [hproj0, hproj1, if_pos, if_neg, ha, if_false, smul_smul, one_div_sqrt_half_mul_one_div_sqrt_two, one_smul]
+    }
   
   
   /-
