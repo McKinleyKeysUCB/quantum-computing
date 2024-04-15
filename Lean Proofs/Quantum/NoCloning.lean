@@ -46,8 +46,8 @@ theorem no_cloning :
           smul_tens,
           Matrix.mul_smul,
           h _ norm_ket1_eq_1,
-          ket0_tens_ket0_eq_ket00,
-          ket1_tens_ket1_eq_ket11,
+          ket0_tens_ket0,
+          ket1_tens_ket1,
         ]
         apply Matrix.ext
         apply Fin.bash4 <;> simp [ket00, ket11, second_expansion]

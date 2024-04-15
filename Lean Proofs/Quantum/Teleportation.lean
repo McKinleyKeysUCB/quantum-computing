@@ -1,6 +1,9 @@
 
 import Quantum.Basic
 
+/-
+ - The proofs in this file are so long that my Lean client times out when verifying them. We have to increase the max heartbeats so that Lean won't time out.
+ -/
 set_option maxHeartbeats 500000
 
 def CNOT₂₁ := I₂ ⨂ CNOT'
@@ -27,7 +30,7 @@ def entangle' :
   := by
     rw [
       Matrix.mul_assoc,
-      ← ket0_tens_ket0_eq_ket00,
+      ← ket0_tens_ket0,
       tens_mul_tens,
       H_mul_ket0,
       I₂,
@@ -40,8 +43,8 @@ def entangle' :
       CNOT_mul_ket0_tens,
       CNOT_mul_ket1_tens,
       X_mul_ket0,
-      ket0_tens_ket0_eq_ket00,
-      ket1_tens_ket1_eq_ket11,
+      ket0_tens_ket0,
+      ket1_tens_ket1,
     ]
 
 noncomputable
@@ -96,8 +99,8 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
       tens_add,
     ]
     nth_rw 1 [
-      ← ket0_tens_ket0_eq_ket00,
-      ← ket1_tens_ket1_eq_ket11,
+      ← ket0_tens_ket0,
+      ← ket1_tens_ket1,
     ]
     conv =>
       lhs
@@ -220,10 +223,10 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
       add_tens,
       sub_tens,
       sub_tens,
-      ket0_tens_ket0_eq_ket00,
-      ket0_tens_ket1_eq_ket01,
-      ket1_tens_ket0_eq_ket10,
-      ket1_tens_ket1_eq_ket11,
+      ket0_tens_ket0,
+      ket0_tens_ket1,
+      ket1_tens_ket0,
+      ket1_tens_ket1,
     ]
     congr 1
     conv =>
@@ -301,7 +304,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
       unfold_let proj0
       rw [this, Matrix.mul_smul]
       congr 1
-      simp only [Matrix.mul_add, tens_mul_tens, I₂, Matrix.one_mul, ← ket0_tens_ket0_eq_ket00, ← ket0_tens_ket1_eq_ket01, ← ket1_tens_ket0_eq_ket10, ← ket1_tens_ket1_eq_ket11]
+      simp only [Matrix.mul_add, tens_mul_tens, I₂, Matrix.one_mul, ← ket0_tens_ket0, ← ket0_tens_ket1, ← ket1_tens_ket0, ← ket1_tens_ket1]
       rw [tens_mul_tens, tens_mul_tens, tens_mul_tens, tens_mul_tens]
       simp only [proj0_mul_ket0, proj0_mul_ket1, Matrix.one_mul, zero_tens, add_zero]
   have hproj1 :
@@ -310,7 +313,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
       unfold_let proj1
       rw [this, Matrix.mul_smul]
       congr 1
-      simp only [Matrix.mul_add, tens_mul_tens, I₂, Matrix.one_mul, ← ket0_tens_ket0_eq_ket00, ← ket0_tens_ket1_eq_ket01, ← ket1_tens_ket0_eq_ket10, ← ket1_tens_ket1_eq_ket11]
+      simp only [Matrix.mul_add, tens_mul_tens, I₂, Matrix.one_mul, ← ket0_tens_ket0, ← ket0_tens_ket1, ← ket1_tens_ket0, ← ket1_tens_ket1]
       rw [tens_mul_tens, tens_mul_tens, tens_mul_tens, tens_mul_tens]
       simp only [proj1_mul_ket1, proj1_mul_ket0, Matrix.one_mul, zero_tens, zero_add]
   have proj0_half_unitary :
@@ -319,7 +322,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
       rw [hproj0]
       simp only [adjoint_add, adjoint_smul, adjoint_tens, Matrix.mul_smul, Matrix.mul_add, Matrix.smul_mul, ← smul_add, smul_smul, Matrix.add_mul, tens_mul_tens]
       rw [ket00_unitary, ket01_unitary]
-      simp only [← ket0_tens_ket1_eq_ket01, ← ket0_tens_ket0_eq_ket00, adjoint_tens]
+      simp only [← ket0_tens_ket1, ← ket0_tens_ket0, adjoint_tens]
       rw [tens_mul_tens, bra1_mul_ket0, tens_mul_tens, bra0_mul_ket1, ket0_unitary, ket1_unitary]
       simp only [tens_zero, zero_tens, smul_zero, zero_add, add_zero]
       simp only [one_tens, QMatrix.toReal, Matrix.smul_apply, Matrix.add_apply]
@@ -334,7 +337,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
       rw [hproj1]
       simp only [adjoint_add, adjoint_sub, adjoint_smul, adjoint_tens, Matrix.mul_smul, Matrix.mul_add, Matrix.mul_sub, Matrix.smul_mul, ← smul_add, smul_smul, Matrix.add_mul, Matrix.sub_mul, tens_mul_tens]
       rw [ket10_unitary, ket11_unitary]
-      simp only [← ket1_tens_ket1_eq_ket11, ← ket1_tens_ket0_eq_ket10, adjoint_tens]
+      simp only [← ket1_tens_ket1, ← ket1_tens_ket0, adjoint_tens]
       rw [tens_mul_tens, bra1_mul_ket0, tens_mul_tens, bra0_mul_ket1, ket0_unitary, ket1_unitary]
       simp only [tens_zero, zero_tens, smul_zero, zero_add, add_zero, sub_zero, zero_sub]
       simp only [one_tens, QMatrix.toReal, Matrix.smul_apply, Matrix.add_apply]
@@ -400,7 +403,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
       by_cases ha : a <;> {
         simp only [if_pos, if_neg, ha, if_false, Matrix.mul_smul]
         congr 1
-        simp only [tens_mul_tens, Matrix.mul_add, ← ket0_tens_ket0_eq_ket00, ← ket0_tens_ket1_eq_ket01, ← ket1_tens_ket0_eq_ket10, ← ket1_tens_ket1_eq_ket11, I₂, Matrix.one_mul]
+        simp only [tens_mul_tens, Matrix.mul_add, ← ket0_tens_ket0, ← ket0_tens_ket1, ← ket1_tens_ket0, ← ket1_tens_ket1, I₂, Matrix.one_mul]
         rw [tens_mul_tens, tens_mul_tens, proj0_mul_ket0, proj0_mul_ket1]
         simp only [tens_zero, zero_tens, one_tens, add_zero, Matrix.one_mul]
       }
@@ -415,7 +418,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
       by_cases ha : a <;> {
         simp only [if_pos, if_neg, ha, if_false, Matrix.mul_smul]
         congr 1
-        simp only [tens_mul_tens, Matrix.mul_add, ← ket0_tens_ket0_eq_ket00, ← ket0_tens_ket1_eq_ket01, ← ket1_tens_ket0_eq_ket10, ← ket1_tens_ket1_eq_ket11, I₂, Matrix.one_mul]
+        simp only [tens_mul_tens, Matrix.mul_add, ← ket0_tens_ket0, ← ket0_tens_ket1, ← ket1_tens_ket0, ← ket1_tens_ket1, I₂, Matrix.one_mul]
         rw [tens_mul_tens, tens_mul_tens, proj1_mul_ket0, proj1_mul_ket1]
         simp only [tens_zero, zero_tens, one_tens, zero_add, Matrix.one_mul]
       }
@@ -509,7 +512,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
         α•|0⟩ + β•|1⟩
   := by
     unfold_let result₀
-    rw [hstate₄, extract₂, bra00, bra01, bra10, bra11, ← ket0_tens_ket0_eq_ket00, ← ket0_tens_ket1_eq_ket01, ← ket1_tens_ket0_eq_ket10, ← ket1_tens_ket1_eq_ket11]
+    rw [hstate₄, extract₂, bra00, bra01, bra10, bra11, ← ket0_tens_ket0, ← ket0_tens_ket1, ← ket1_tens_ket0, ← ket1_tens_ket1]
     simp only [adjoint_tens]
     by_cases ha : a <;> by_cases hb : b <;> {
       simp only [if_pos, if_neg, ha, hb, if_false ]

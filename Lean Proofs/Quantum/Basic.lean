@@ -155,7 +155,7 @@ lemma qubit_tens_qubit (a b : Qubit) :
     congr
 
 @[simp]
-lemma ket0_tens_ket0_eq_ket00 :
+lemma ket0_tens_ket0 :
   |0⟩ ⨂ |0⟩ = |00⟩
   := by
     rw [qubit_tens_qubit, ← Matrix.ext_iff]
@@ -163,7 +163,7 @@ lemma ket0_tens_ket0_eq_ket00 :
     unfold ket0 ket00
     simp
 @[simp]
-lemma ket0_tens_ket1_eq_ket01 :
+lemma ket0_tens_ket1 :
   |0⟩ ⨂ |1⟩ = |01⟩
   := by
     rw [qubit_tens_qubit, ← Matrix.ext_iff]
@@ -174,7 +174,7 @@ lemma ket0_tens_ket1_eq_ket01 :
     rw [if_neg]
     norm_num [i']
 @[simp]
-lemma ket1_tens_ket0_eq_ket10 :
+lemma ket1_tens_ket0 :
   |1⟩ ⨂ |0⟩ = |10⟩
   := by
     rw [qubit_tens_qubit, ← Matrix.ext_iff]
@@ -183,7 +183,7 @@ lemma ket1_tens_ket0_eq_ket10 :
     simp
     by_cases hi : i = 2 <;> simp [hi]
 @[simp]
-lemma ket1_tens_ket1_eq_ket11 :
+lemma ket1_tens_ket1 :
   |1⟩ ⨂ |1⟩ = |11⟩
   := by
     rw [qubit_tens_qubit, ← Matrix.ext_iff]
@@ -617,19 +617,23 @@ lemma unitary_tens_unitary {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {
 lemma ket00_unitary :
   |00⟩.unitary
   := by
-    simp only [← ket0_tens_ket0_eq_ket00, unitary_tens_unitary, ket0_unitary]
+    rw [← ket0_tens_ket0]
+    exact unitary_tens_unitary ket0_unitary ket0_unitary
 lemma ket01_unitary :
   |01⟩.unitary
   := by
-    simp only [← ket0_tens_ket1_eq_ket01, unitary_tens_unitary, ket0_unitary, ket1_unitary]
+    rw [← ket0_tens_ket1]
+    exact unitary_tens_unitary ket0_unitary ket1_unitary
 lemma ket10_unitary :
   |10⟩.unitary
   := by
-    simp only [← ket1_tens_ket0_eq_ket10, unitary_tens_unitary, ket0_unitary, ket1_unitary]
+    rw [← ket1_tens_ket0]
+    exact unitary_tens_unitary ket1_unitary ket0_unitary
 lemma ket11_unitary :
   |11⟩.unitary
   := by
-    simp only [← ket1_tens_ket1_eq_ket11, unitary_tens_unitary, ket1_unitary]
+    rw [← ket1_tens_ket1]
+    exact unitary_tens_unitary ket1_unitary ket1_unitary
 
 
 /-
