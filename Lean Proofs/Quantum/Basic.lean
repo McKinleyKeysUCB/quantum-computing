@@ -47,6 +47,12 @@ lemma ket1_unitary :
   := by
     rw [qubit_unitary, Qubit.α, Qubit.β, ket1]
     simp
+lemma bra0_mul_ket0 :
+  ⟨0| * |0⟩ = 1
+  := ket0_unitary
+lemma bra1_mul_ket1 :
+  ⟨1| * |1⟩ = 1
+  := ket1_unitary
 lemma bra1_mul_ket0 :
   ⟨1| * |0⟩ = 0
   := by

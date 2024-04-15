@@ -71,6 +71,15 @@ def ket10 : Qubits 2 :=
 def ket11 : Qubits 2 :=
   fun i _ => if i = 3 then 1 else 0
 
+@[reducible]
+def bra00 := ket00†
+@[reducible]
+def bra01 := ket01†
+@[reducible]
+def bra10 := ket10†
+@[reducible]
+def bra11 := ket11†
+
 notation "|0⟩" => ket0
 notation "|1⟩" => ket1
 notation "|00⟩" => ket00
@@ -81,6 +90,10 @@ notation "|+⟩" => ket_plus
 notation "|-⟩" => ket_minus
 notation "⟨0|" => bra0
 notation "⟨1|" => bra1
+notation "⟨00|" => bra00
+notation "⟨01|" => bra01
+notation "⟨10|" => bra10
+notation "⟨11|" => bra11
 
 
 /-
@@ -442,7 +455,7 @@ section MatrixProperties
 
 variable {m n : ℕ} (M : QMatrix m n)
 
-@[simp]
+@[simp, reducible]
 def QMatrix.unitary := M† * M = 1
 
 end MatrixProperties

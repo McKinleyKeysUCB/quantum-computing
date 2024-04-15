@@ -15,10 +15,8 @@ def Qmeasure₀_rng := Qmeasure₃₀_rng
 noncomputable
 def Qmeasure₁_rng := Qmeasure₃₁_rng
 
-def extract₂ (state : Qubits 3) : Random Qubit := do
-  sorry
-def extract₂_rng (state : Qubits 3) (rng : RNG) : Qubit × RNG :=
-  sorry
+def extract₂ (state : Qubits 3) : Qubit :=
+  ((⟨00| + ⟨01| + ⟨10| + ⟨11|) ⨂ I₂) * state
 
 def entangle :
   CNOT' * (I₂ ⨂ H) * |00⟩ = |Φ+⟩
@@ -53,7 +51,7 @@ def teleport_random (φ : Qubit) : Random Qubit := do
   let state₂ := (H ⨂ I₂ ⨂ I₂) * CNOT₀₁ * state₁
   let ⟨a, state₃⟩ ← Qmeasure₀ state₂
   let ⟨b, state₄⟩ ← Qmeasure₁ state₃
-  let mut result ← extract₂ state₄
+  let mut result := extract₂ state₄
   if a then
     result := X * result
   if b then
@@ -496,8 +494,34 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
    - Extraction
    -/
   
-  let ⟨result₀, rng₃⟩ := extract₂_rng state₄ rng₂
+  let result₀ := extract₂ state₄
   
+  have hresult₀ : result₀ =
+    if a then
+      if b then
+        -β•|0⟩ + α•|1⟩
+      else
+        α•|0⟩ - β•|1⟩
+    else
+      if b then
+        β•|0⟩ + α•|1⟩
+      else
+        α•|0⟩ + β•|1⟩
+  := by
+    unfold_let result₀
+    rw [hstate₄, extract₂, bra00, bra01, bra10, bra11, ← ket0_tens_ket0_eq_ket00, ← ket0_tens_ket1_eq_ket01, ← ket1_tens_ket0_eq_ket10, ← ket1_tens_ket1_eq_ket11]
+    simp only [adjoint_tens]
+    by_cases ha : a <;> by_cases hb : b <;> {
+      simp only [if_pos, if_neg, ha, hb, if_false ]
+      rw [tens_mul_tens]
+      simp only [Matrix.add_mul]
+      rw [tens_mul_tens, tens_mul_tens, tens_mul_tens, tens_mul_tens]
+      try rw [ket0_unitary]
+      try rw [ket1_unitary]
+      simp only [bra0_mul_ket1, bra1_mul_ket0, tens_zero, zero_tens, add_zero, zero_add, I₂, Matrix.one_mul]
+      rw [tens_assoc, one_tens, one_tens]
+      rfl
+    }
   
   /-
    - X Gate
