@@ -1,6 +1,8 @@
 
 import Quantum.Basic
 
+set_option maxHeartbeats 500000
+
 def CNOT₂₁ := I₂ ⨂ CNOT'
 def CNOT₀₁ := CNOT ⨂ I₂
 
@@ -277,6 +279,11 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
         add_sub_assoc,
       ]
   
+  
+  /-
+   - First Measurement
+   -/
+  
   /-
    - Unfortunately we can't use destructuring syntax like
    -   let ⟨⟨a, state₃⟩, rng⟩ := Qmeasure₀_rng state₂ rng
@@ -344,7 +351,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
     simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
     simp only [apply_ite Prod.fst, apply_ite Prod.snd]
     rw [if_true_false]
-  have : state₃ =
+  have hstate₃ : state₃ =
     if a then
       (1/√2) • (|10⟩ ⨂ (α•|0⟩ - β•|1⟩) + |11⟩ ⨂ (-β•|0⟩ + α•|1⟩))
     else
@@ -365,10 +372,146 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
       rw [hproj0, smul_smul]
       congr 1
       exact one_div_sqrt_half_mul_half
-  let ⟨⟨b, state₄⟩, rng₂⟩ := Qmeasure₁_rng state₃ rng₁
+  
+  
+  /-
+   - Second Measurement
+   -/
+  
+  let second_measurement := Qmeasure₁_rng state₃ rng₁
+  let b := second_measurement.1.1
+  let state₄ := second_measurement.1.2
+  let rng₂ := second_measurement.2
+  
+  let proj0 := (I₂ ⨂ |0⟩⟨0| ⨂ I₂) * state₃
+  let proj1 := (I₂ ⨂ |1⟩⟨1| ⨂ I₂) * state₃
+  /-
+    if a then
+      (1/√2) • (|10⟩ ⨂ (α•|0⟩ - β•|1⟩) + |11⟩ ⨂ (-β•|0⟩ + α•|1⟩))
+    else
+      (1/√2) • (|00⟩ ⨂ (α•|0⟩ + β•|1⟩) + |01⟩ ⨂ (β•|0⟩ + α•|1⟩))
+   -/
+  have hproj0 :
+    proj0 =
+      if a then
+        (1/√2) • (|10⟩ ⨂ (α•|0⟩ - β•|1⟩))
+      else
+        (1/√2) • (|00⟩ ⨂ (α•|0⟩ + β•|1⟩))
+    := by
+      simp only [proj0, hstate₃, apply_ite]
+      by_cases ha : a <;> {
+        simp only [if_pos, if_neg, ha, if_false, Matrix.mul_smul]
+        congr 1
+        simp only [tens_mul_tens, Matrix.mul_add, ← ket0_tens_ket0_eq_ket00, ← ket0_tens_ket1_eq_ket01, ← ket1_tens_ket0_eq_ket10, ← ket1_tens_ket1_eq_ket11, I₂, Matrix.one_mul]
+        rw [tens_mul_tens, tens_mul_tens, proj0_mul_ket0, proj0_mul_ket1]
+        simp only [tens_zero, zero_tens, one_tens, add_zero, Matrix.one_mul]
+      }
+  have hproj1 :
+    proj1 =
+      if a then
+        (1/√2) • (|11⟩ ⨂ (-β•|0⟩ + α•|1⟩))
+      else
+        (1/√2) • (|01⟩ ⨂ (β•|0⟩ + α•|1⟩))
+    := by
+      simp only [proj1, hstate₃, apply_ite]
+      by_cases ha : a <;> {
+        simp only [if_pos, if_neg, ha, if_false, Matrix.mul_smul]
+        congr 1
+        simp only [tens_mul_tens, Matrix.mul_add, ← ket0_tens_ket0_eq_ket00, ← ket0_tens_ket1_eq_ket01, ← ket1_tens_ket0_eq_ket10, ← ket1_tens_ket1_eq_ket11, I₂, Matrix.one_mul]
+        rw [tens_mul_tens, tens_mul_tens, proj1_mul_ket0, proj1_mul_ket1]
+        simp only [tens_zero, zero_tens, one_tens, zero_add, Matrix.one_mul]
+      }
+  have proj0_half_unitary :
+    QMatrix.toReal (proj0† * proj0) = (1/2 : ℝ)
+    := by
+      rw [hproj0]
+      rw [qubit_unitary', mul_comm, mul_comm (star φ.β)] at hφ
+      change α * star α + β * star β = 1 at hφ
+      by_cases ha : a <;> {
+        simp only [if_pos, if_neg, ha, if_false]
+        simp only [adjoint_add, adjoint_smul, adjoint_tens, Matrix.mul_smul, Matrix.mul_add, Matrix.smul_mul, ← smul_add, smul_smul, Matrix.add_mul, tens_mul_tens]
+        try rw [ket10_unitary, adjoint_sub]
+        try rw [ket00_unitary]
+        simp only [Matrix.sub_mul, Matrix.mul_sub, bra1_mul_ket0, bra0_mul_ket1, adjoint_smul, Matrix.mul_smul, Matrix.smul_mul, smul_zero]
+        rw [ket0_unitary, ket1_unitary]
+        simp only [sub_zero, zero_sub, add_zero, zero_add]
+        simp only [one_tens, QMatrix.toReal, Matrix.smul_apply, Matrix.add_apply, smul_neg, sub_eq_add_neg, neg_neg]
+        simp only [QMatrix.cast_apply, Fin.cast_zero, Matrix.add_apply, Matrix.smul_apply, Matrix.one_apply, if_true, smul_eq_mul, mul_one, hφ]
+        norm_num
+        exact sqrt_two_div_two_sq
+      }
+  have proj1_half_unitary :
+    QMatrix.toReal (proj1† * proj1) = (1/2 : ℝ)
+    := by
+      rw [hproj1]
+      rw [qubit_unitary', mul_comm, mul_comm (star φ.β)] at hφ
+      change α * star α + β * star β = 1 at hφ
+      by_cases ha : a <;> {
+        simp only [if_pos, if_neg, ha, if_false]
+        simp only [adjoint_add, adjoint_smul, adjoint_tens, Matrix.mul_smul, Matrix.mul_add, Matrix.smul_mul, ← smul_add, smul_smul, Matrix.add_mul, tens_mul_tens]
+        try rw [ket01_unitary]
+        try rw [ket11_unitary]
+        simp only [Matrix.sub_mul, Matrix.mul_sub, bra1_mul_ket0, bra0_mul_ket1, adjoint_smul, Matrix.mul_smul, Matrix.smul_mul, smul_zero]
+        rw [ket0_unitary, ket1_unitary]
+        simp only [sub_zero, zero_sub, add_zero, zero_add]
+        simp only [one_tens, QMatrix.toReal, Matrix.smul_apply, Matrix.add_apply, smul_neg, sub_eq_add_neg, neg_neg]
+        simp only [QMatrix.cast_apply, Fin.cast_zero, Matrix.add_apply, Matrix.smul_apply, Matrix.one_apply, if_true, smul_eq_mul, mul_one, neg_mul, mul_neg, star_neg, neg_neg]
+        rw [add_comm, hφ]
+        norm_num
+        exact sqrt_two_div_two_sq
+      }
+  have ha : a = (rng.flip (1/2)).1 := by
+    -- unfold_let a first_measurement
+    -- unfold Qmeasure₀_rng Qmeasure₃₀_rng Qmeasure_single_qubit_rng
+    -- simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
+    -- simp only [apply_ite Prod.fst, apply_ite Prod.snd]
+    -- rw [if_true_false]
+    sorry
+  have : state₃ =
+    if a then
+      (1/√2) • (|10⟩ ⨂ (α•|0⟩ - β•|1⟩) + |11⟩ ⨂ (-β•|0⟩ + α•|1⟩))
+    else
+      (1/√2) • (|00⟩ ⨂ (α•|0⟩ + β•|1⟩) + |01⟩ ⨂ (β•|0⟩ + α•|1⟩))
+  := by
+    -- unfold_let state₃
+    -- unfold_let first_measurement at a ⊢
+    -- unfold Qmeasure₀_rng Qmeasure₃₀_rng Qmeasure_single_qubit_rng
+    -- simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
+    -- simp only [apply_ite Prod.fst, apply_ite Prod.snd]
+    -- rw [← ha]
+    -- congr 1
+    -- · unfold_let proj1 at hproj1
+    --   rw [hproj1, smul_smul]
+    --   congr 1
+    --   exact one_div_sqrt_half_mul_half
+    -- · unfold_let proj0 at hproj0
+    --   rw [hproj0, smul_smul]
+    --   congr 1
+    --   exact one_div_sqrt_half_mul_half
+    sorry
+  
+  
+  /-
+   - Extraction
+   -/
+  
   let ⟨result₀, rng₃⟩ := extract₂_rng state₄ rng₂
+  
+  
+  /-
+   - X Gate
+   -/
+  
   let result₁ := if a then X * result₀ else result₀
+  
+  
+  /-
+   - Z Gate
+   -/
+  
   let result₂ := if b then Z * result₁ else result₁
+  
+  
   ⟨result₂, rng₃⟩
 
 -- def mymul (a b : ℕ) := a * b

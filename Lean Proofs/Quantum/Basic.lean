@@ -625,9 +625,19 @@ lemma ket11_unitary :
   := by
     simp only [← ket1_tens_ket1_eq_ket11, unitary_tens_unitary, ket1_unitary]
 
+
+/-
+ - Square Roots
+ -/
+
 lemma one_div_sqrt_half_mul_half :
   ↑(1 / Real.sqrt (1 / 2)) * (1 / 2) = 1 / Complex.ofReal (Real.sqrt 2)
   := by
     rw [Complex.ofReal_eq_coe, Complex.div_ofReal, Complex.ofReal_mul']
     simp
     rw [← division_def, Real.sqrt_div_self]
+
+lemma sqrt_two_div_two_sq :
+  Real.sqrt 2 / 2 * (Real.sqrt 2 / 2) = 1 / 2
+  := by
+    simp only [Real.sqrt_div_self', one_div, ← mul_inv, Nat.ofNat_nonneg, Real.mul_self_sqrt]
