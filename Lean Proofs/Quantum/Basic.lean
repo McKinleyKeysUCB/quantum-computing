@@ -27,22 +27,25 @@ lemma norm_ket_plus_eq_1 :
     simp [norm, ket_plus, Qubit.α, Qubit.β]
     rw [inv_eq_one_div, add_halves]
 
-lemma qubit_unitary {φ : Qubit} (h : Complex.normSq φ.α + Complex.normSq φ.β = 1) :
-  φ.unitary
+lemma qubit_unitary {φ : Qubit} :
+  φ.unitary ↔ Complex.normSq φ.α + Complex.normSq φ.β = 1
+  := by
+    sorry
+
+lemma qubit_unitary' {φ : Qubit} :
+  φ.unitary ↔ star φ.α * φ.α + star φ.β * φ.β = 1
   := by
     sorry
 
 lemma ket0_unitary :
   |0⟩.unitary
   := by
-    apply qubit_unitary
-    unfold Qubit.α Qubit.β ket0
+    rw [qubit_unitary, Qubit.α, Qubit.β, ket0]
     simp
 lemma ket1_unitary :
   |1⟩.unitary
   := by
-    apply qubit_unitary
-    unfold Qubit.α Qubit.β ket1
+    rw [qubit_unitary, Qubit.α, Qubit.β, ket1]
     simp
 lemma bra1_mul_ket0 :
   ⟨1| * |0⟩ = 0

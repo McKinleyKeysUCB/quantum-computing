@@ -59,7 +59,7 @@ def teleport_random (φ : Qubit) : Random Qubit := do
   pure result
 
 noncomputable
-def teleport_rng (φ : Qubit) (rng : RNG) : Qubit × RNG :=
+def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
   let α := φ.α
   let β := φ.β
   let state₀ := φ ⨂ |00⟩
@@ -288,33 +288,71 @@ def teleport_rng (φ : Qubit) (rng : RNG) : Qubit × RNG :=
   let state₃ := first_measurement.1.2
   let rng := first_measurement.2
   
-  have : (|0⟩⟨0| ⨂ I₂ ⨂ I₂) * state₂ = (1/2 : ℂ) • (|00⟩ ⨂ (α•|0⟩ + β•|1⟩) + |01⟩ ⨂ (β•|0⟩ + α•|1⟩)) := by
-    rw [this, Matrix.mul_smul]
-    congr 1
-    simp only [Matrix.mul_add, tens_mul_tens, I₂, Matrix.one_mul, ← ket0_tens_ket0_eq_ket00, ← ket0_tens_ket1_eq_ket01, ← ket1_tens_ket0_eq_ket10, ← ket1_tens_ket1_eq_ket11]
-    simp only [tens_mul_tens, proj0_mul_ket0, proj0_mul_ket1, Matrix.one_mul, zero_tens, add_zero]
-  have : (|1⟩⟨1| ⨂ I₂ ⨂ I₂) * state₂ = (1/2 : ℂ) • (|10⟩ ⨂ (α•|0⟩ - β•|1⟩) + |11⟩ ⨂ (-β•|0⟩ + α•|1⟩)) := by
-    rw [this, Matrix.mul_smul]
-    congr 1
-    simp only [Matrix.mul_add, tens_mul_tens, I₂, Matrix.one_mul, ← ket0_tens_ket0_eq_ket00, ← ket0_tens_ket1_eq_ket01, ← ket1_tens_ket0_eq_ket10, ← ket1_tens_ket1_eq_ket11]
-    simp only [tens_mul_tens, proj1_mul_ket0, proj1_mul_ket1, Matrix.one_mul, zero_tens, add_zero]
-  
+  let proj0 := (|0⟩⟨0| ⨂ I₂ ⨂ I₂) * state₂
+  let proj1 := (|1⟩⟨1| ⨂ I₂ ⨂ I₂) * state₂
+  have hproj0 :
+    proj0 = (1/2 : ℂ) • (|00⟩ ⨂ (α•|0⟩ + β•|1⟩) + |01⟩ ⨂ (β•|0⟩ + α•|1⟩))
+    := by
+      unfold_let proj0
+      rw [this, Matrix.mul_smul]
+      congr 1
+      simp only [Matrix.mul_add, tens_mul_tens, I₂, Matrix.one_mul, ← ket0_tens_ket0_eq_ket00, ← ket0_tens_ket1_eq_ket01, ← ket1_tens_ket0_eq_ket10, ← ket1_tens_ket1_eq_ket11]
+      rw [tens_mul_tens, tens_mul_tens, tens_mul_tens, tens_mul_tens]
+      simp only [proj0_mul_ket0, proj0_mul_ket1, Matrix.one_mul, zero_tens, add_zero]
+  have hproj1 :
+    proj1 = (1/2 : ℂ) • (|10⟩ ⨂ (α•|0⟩ - β•|1⟩) + |11⟩ ⨂ (-β•|0⟩ + α•|1⟩))
+    := by
+      unfold_let proj1
+      rw [this, Matrix.mul_smul]
+      congr 1
+      simp only [Matrix.mul_add, tens_mul_tens, I₂, Matrix.one_mul, ← ket0_tens_ket0_eq_ket00, ← ket0_tens_ket1_eq_ket01, ← ket1_tens_ket0_eq_ket10, ← ket1_tens_ket1_eq_ket11]
+      rw [tens_mul_tens, tens_mul_tens, tens_mul_tens, tens_mul_tens]
+      simp only [proj1_mul_ket1, proj1_mul_ket0, Matrix.one_mul, zero_tens, zero_add]
+  have proj0_half_unitary :
+    QMatrix.toReal (proj0† * proj0) = (1/2 : ℝ)
+    := by
+      rw [hproj0]
+      simp only [adjoint_add, adjoint_smul, adjoint_tens, Matrix.mul_smul, Matrix.mul_add, Matrix.smul_mul, ← smul_add, smul_smul, Matrix.add_mul, tens_mul_tens]
+      rw [ket00_unitary, ket01_unitary]
+      simp only [← ket0_tens_ket1_eq_ket01, ← ket0_tens_ket0_eq_ket00, adjoint_tens]
+      rw [tens_mul_tens, bra1_mul_ket0, tens_mul_tens, bra0_mul_ket1, ket0_unitary, ket1_unitary]
+      simp only [tens_zero, zero_tens, smul_zero, zero_add, add_zero]
+      simp only [one_tens, QMatrix.toReal, Matrix.smul_apply, Matrix.add_apply]
+      simp only [QMatrix.cast_apply, Fin.cast_zero, Matrix.add_apply, Matrix.smul_apply, Matrix.one_apply, if_true, smul_eq_mul, mul_one]
+      rw [qubit_unitary', mul_comm, mul_comm (star φ.β)] at hφ
+      change α * star α + β * star β = 1 at hφ
+      rw [hφ, add_comm (β * star β), hφ]
+      norm_num
+  have proj1_half_unitary :
+    QMatrix.toReal (proj1† * proj1) = (1/2 : ℝ)
+    := by
+      rw [hproj1]
+      simp only [adjoint_add, adjoint_sub, adjoint_smul, adjoint_tens, Matrix.mul_smul, Matrix.mul_add, Matrix.mul_sub, Matrix.smul_mul, ← smul_add, smul_smul, Matrix.add_mul, Matrix.sub_mul, tens_mul_tens]
+      rw [ket10_unitary, ket11_unitary]
+      simp only [← ket1_tens_ket1_eq_ket11, ← ket1_tens_ket0_eq_ket10, adjoint_tens]
+      rw [tens_mul_tens, bra1_mul_ket0, tens_mul_tens, bra0_mul_ket1, ket0_unitary, ket1_unitary]
+      simp only [tens_zero, zero_tens, smul_zero, zero_add, add_zero, sub_zero, zero_sub]
+      simp only [one_tens, QMatrix.toReal, Matrix.smul_apply, Matrix.add_apply]
+      simp only [QMatrix.cast_apply, Fin.cast_zero, Matrix.add_apply, Matrix.sub_apply, Matrix.neg_apply, Matrix.smul_apply, Matrix.one_apply, if_true, smul_eq_mul, mul_one, mul_neg, sub_neg_eq_add, star_neg, neg_mul, neg_neg]
+      rw [qubit_unitary', mul_comm, mul_comm (star φ.β)] at hφ
+      change α * star α + β * star β = 1 at hφ
+      rw [hφ, add_comm (β * star β), hφ]
+      norm_num
   have : state₃ =
     if a then
       (1/√2) • (|10⟩ ⨂ (α•|0⟩ - β•|1⟩) + |11⟩ ⨂ (-β•|0⟩ + α•|1⟩))
     else
       (1/√2) • (|00⟩ ⨂ (α•|0⟩ + β•|1⟩) + |01⟩ ⨂ (β•|0⟩ + α•|1⟩))
   := by
-    
-    unfold_let state₃ first_measurement
-    unfold Qmeasure₀_rng Qmeasure₃₀_rng Qmeasure_single_qubit_rng
-    let zero_proj := (|0⟩⟨0| ⨂ I₂ ⨂ I₂) * state₂
-    have : zero_proj * state₂ = 
-    have : QMatrix.toReal (zero_proj† * zero_proj) = 1/2 := by
-      
-      sorry
-    rw [this]
     sorry
+    -- unfold_let state₃ first_measurement
+    -- unfold Qmeasure₀_rng Qmeasure₃₀_rng Qmeasure_single_qubit_rng
+    -- let zero_proj := (|0⟩⟨0| ⨂ I₂ ⨂ I₂) * state₂
+    -- have : zero_proj * state₂ = 
+    -- have : QMatrix.toReal (zero_proj† * zero_proj) = 1/2 := by
+    --   sorry
+    -- rw [this]
+    -- sorry
   let ⟨⟨b, state₄⟩, rng⟩ := Qmeasure₁_rng state₃ rng
   let ⟨result₀, rng⟩ := extract₂_rng state₄ rng
   let result₁ := if a then X * result₀ else result₀
