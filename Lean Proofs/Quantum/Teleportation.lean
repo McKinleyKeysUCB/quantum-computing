@@ -61,8 +61,14 @@ def teleport_random (φ : Qubit) : Random Qubit := do
     result := Z * result
   pure result
 
+structure TeleportRNGResult (φ : Qubit) where
+  ψ : Qubit
+  hφ : ψ = φ
+  rng : RNG
+
 noncomputable
-def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
+def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
+  TeleportRNGResult φ :=
   let α := φ.α
   let β := φ.β
   let state₀ := φ ⨂ |00⟩
@@ -568,8 +574,14 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
     · simp only [if_neg ha]
       
   
+  let ψ := result₂
+  have hψ : ψ = φ := by
+    unfold_let ψ
+    rw [hresult₂]
+    unfold_let α β
+    rw [← decompose_qubit_into_Z_basis φ]
   
-  ⟨result₂, rng₂⟩
+  ⟨ψ, hψ, rng₂⟩
 
 -- def mymul (a b : ℕ) := a * b
 -- def myadd (a b : ℕ) := a + b
