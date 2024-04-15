@@ -449,6 +449,29 @@ lemma CNOT_mul_ket1_tens {φ : Qubit} :
     ]
     simp
 
+
+lemma decompose_qubit_into_Z_basis (φ : Qubit) :
+  φ = φ.α • |0⟩ + φ.β • |1⟩
+  := by
+    apply Matrix.ext
+    intro i j
+    rw [Matrix.add_apply]
+    rw [Matrix.smul_apply, Matrix.smul_apply]
+    have hj : j = 0 := by
+      apply Fin.eq_zero
+    rw [hj, ket0, ket1]
+    by_cases hi : i = 0
+    · rw [hi]
+      simp
+    · apply Fin.eq_one_of_neq_zero i at hi
+      rw [hi]
+      simp
+
+
+/-
+ - X Gate
+ -/
+
 @[simp]
 lemma X_mul_ket0 :
   X * |0⟩ = |1⟩
@@ -470,22 +493,52 @@ lemma X_mul_ket1 :
       simp
     }
 
-lemma decompose_qubit_into_Z_basis (φ : Qubit) :
-  φ = φ.α • |0⟩ + φ.β • |1⟩
+lemma X_mul_qubit' {α β : ℂ} :
+  X * (α•|0⟩ + β•|1⟩) = β•|0⟩ + α•|1⟩
   := by
+    simp only [Matrix.mul_add, Matrix.mul_smul, X_mul_ket0, X_mul_ket1, add_comm]
+lemma X_mul_qubit {φ : Qubit} :
+  X * φ = φ.β•|0⟩ + φ.α•|1⟩
+  := by
+    nth_rw 1 [decompose_qubit_into_Z_basis φ]
+    rw [X_mul_qubit']
+
+
+/-
+ - Z Gate
+ -/
+
+@[simp]
+lemma Z_mul_ket0 :
+  Z * |0⟩ = |0⟩
+  := by
+    unfold Z ket0
     apply Matrix.ext
-    intro i j
-    rw [Matrix.add_apply]
-    rw [Matrix.smul_apply, Matrix.smul_apply]
-    have hj : j = 0 := by
-      apply Fin.eq_zero
-    rw [hj, ket0, ket1]
-    by_cases hi : i = 0
-    · rw [hi]
+    apply Fin.bash2 <;> {
+      rw [Matrix.mul_apply]
       simp
-    · apply Fin.eq_one_of_neq_zero i at hi
-      rw [hi]
+    }
+@[simp]
+lemma Z_mul_ket1 :
+  Z * |1⟩ = -|1⟩
+  := by
+    unfold Z ket1
+    apply Matrix.ext
+    apply Fin.bash2 <;> {
+      rw [Matrix.mul_apply]
       simp
+    }
+
+lemma Z_mul_qubit' {α β : ℂ} :
+  Z * (α•|0⟩ + β•|1⟩) = α•|0⟩ - β•|1⟩
+  := by
+    simp only [Matrix.mul_add, Matrix.mul_smul, Z_mul_ket0, Z_mul_ket1, smul_neg, sub_eq_add_neg]
+lemma Z_mul_qubit {φ : Qubit} :
+  Z * φ = φ.α•|0⟩ - φ.β•|1⟩
+  := by
+    nth_rw 1 [decompose_qubit_into_Z_basis φ]
+    rw [Z_mul_qubit']
+
 
 lemma tens_self (φ : Qubit) :
   let α := φ 0 0
