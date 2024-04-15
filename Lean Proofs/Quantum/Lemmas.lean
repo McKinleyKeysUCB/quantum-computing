@@ -61,3 +61,8 @@ lemma Fin.bash4 {P : Fin 4 → Fin 1 → Prop} (hP0 : P 0 0) (hP1 : P 1 0) (hP2 
     have hi3 : i = 3 := Fin.eq_three_of_ne_all hi0 hi1 hi2
     rw [hi3]
     exact hP3
+
+lemma if_true_false {p : Bool} :
+  (if p then true else false) = p
+  := by
+    by_cases h : p <;> simp [h]

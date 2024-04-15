@@ -286,7 +286,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
   let first_measurement := Qmeasure₀_rng state₂ rng
   let a := first_measurement.1.1
   let state₃ := first_measurement.1.2
-  let rng := first_measurement.2
+  let rng₁ := first_measurement.2
   
   let proj0 := (|0⟩⟨0| ⨂ I₂ ⨂ I₂) * state₂
   let proj1 := (|1⟩⟨1| ⨂ I₂ ⨂ I₂) * state₂
@@ -338,26 +338,38 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
       change α * star α + β * star β = 1 at hφ
       rw [hφ, add_comm (β * star β), hφ]
       norm_num
+  have ha : a = (rng.flip (1/2)).1 := by
+    unfold_let a first_measurement
+    unfold Qmeasure₀_rng Qmeasure₃₀_rng Qmeasure_single_qubit_rng
+    simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
+    simp only [apply_ite Prod.fst, apply_ite Prod.snd]
+    rw [if_true_false]
   have : state₃ =
     if a then
       (1/√2) • (|10⟩ ⨂ (α•|0⟩ - β•|1⟩) + |11⟩ ⨂ (-β•|0⟩ + α•|1⟩))
     else
       (1/√2) • (|00⟩ ⨂ (α•|0⟩ + β•|1⟩) + |01⟩ ⨂ (β•|0⟩ + α•|1⟩))
   := by
-    sorry
-    -- unfold_let state₃ first_measurement
-    -- unfold Qmeasure₀_rng Qmeasure₃₀_rng Qmeasure_single_qubit_rng
-    -- let zero_proj := (|0⟩⟨0| ⨂ I₂ ⨂ I₂) * state₂
-    -- have : zero_proj * state₂ = 
-    -- have : QMatrix.toReal (zero_proj† * zero_proj) = 1/2 := by
-    --   sorry
-    -- rw [this]
-    -- sorry
-  let ⟨⟨b, state₄⟩, rng⟩ := Qmeasure₁_rng state₃ rng
-  let ⟨result₀, rng⟩ := extract₂_rng state₄ rng
+    unfold_let state₃
+    unfold_let first_measurement at a ⊢
+    unfold Qmeasure₀_rng Qmeasure₃₀_rng Qmeasure_single_qubit_rng
+    simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
+    simp only [apply_ite Prod.fst, apply_ite Prod.snd]
+    rw [← ha]
+    congr 1
+    · unfold_let proj1 at hproj1
+      rw [hproj1, smul_smul]
+      congr 1
+      exact one_div_sqrt_half_mul_half
+    · unfold_let proj0 at hproj0
+      rw [hproj0, smul_smul]
+      congr 1
+      exact one_div_sqrt_half_mul_half
+  let ⟨⟨b, state₄⟩, rng₂⟩ := Qmeasure₁_rng state₃ rng₁
+  let ⟨result₀, rng₃⟩ := extract₂_rng state₄ rng₂
   let result₁ := if a then X * result₀ else result₀
   let result₂ := if b then Z * result₁ else result₁
-  ⟨result₂, rng⟩
+  ⟨result₂, rng₃⟩
 
 -- def mymul (a b : ℕ) := a * b
 -- def myadd (a b : ℕ) := a + b

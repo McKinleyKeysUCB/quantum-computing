@@ -231,11 +231,11 @@ def Qmeasure_single_qubit_rng {n : ℕ} (φ : QVector n) (M₀ M₁ : QSquare n)
   let φ₀ := Complex.ofReal' (1 / p₀.sqrt) • (M₀ * φ)
   let p₁ : [0,1] := (M₁ * φ)† * (M₁ * φ)
   let φ₁ := Complex.ofReal' (1 / p₁.sqrt) • (M₁ * φ)
-  let ⟨result, rng⟩ := rng.flip p₀
+  let ⟨result, rng⟩ := rng.flip p₁
   if result then
-    ⟨⟨false, φ₀⟩, rng⟩
-  else
     ⟨⟨true, φ₁⟩, rng⟩
+  else
+    ⟨⟨false, φ₀⟩, rng⟩
 
 @[simp]
 noncomputable
