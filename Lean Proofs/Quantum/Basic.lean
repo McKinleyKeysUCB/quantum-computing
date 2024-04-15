@@ -6,6 +6,8 @@ import Mathlib.Data.Complex.Basic
 import Quantum.Definitions
 import Quantum.Lemmas
 
+open BigOperators
+
 lemma one_div_sqrt_two_sq :
   (1/√2) * (1/√2) = 1/2
   := by
@@ -258,6 +260,39 @@ def div_mod_inv {a b : ℕ} (q : Fin a) (r : Fin b) : Fin (a * b) :=
       _ ≤ b * a           := Nat.mul_le_mul_left b hq
       _ = a * b           := mul_comm _ _
   ⟩
+
+lemma divNat_div_mod_inv {a b : ℕ} {q : Fin a} {r : Fin b} :
+  (div_mod_inv q r).divNat = q
+  := by
+    by_cases hb : b = 0
+    · rw [hb] at r
+      exfalso
+      exact false_of_mem_Fin_zero r
+    · apply Nat.zero_lt_of_ne_zero at hb
+      rw [div_mod_inv, Fin.divNat]
+      apply Fin.ext
+      dsimp
+      rw [
+        Nat.div_eq_sub_mod_div,
+        Nat.mul_add_mod,
+        Nat.mod_eq_of_lt r.isLt,
+        add_tsub_cancel_right,
+        Nat.mul_div_cancel_left _ hb,
+      ]
+
+lemma modNat_div_mod_inv {a b : ℕ} {q : Fin a} {r : Fin b} :
+  (div_mod_inv q r).modNat = r
+  := by
+    rw [div_mod_inv, Fin.modNat]
+    apply Fin.ext
+    dsimp
+    rw [
+      Nat.add_mod,
+      Nat.mul_mod_right,
+      zero_add,
+      Nat.mod_mod,
+      Nat.mod_eq_of_lt r.isLt,
+    ]
 
 -- theorem tens_ext {M : QMatrix (m*p) (n*q)} (h : ∀ (r : Fin m) (s : Fin n) (v : Fin p) (w : Fin q), A r s * B v w = M (div_mod_inv r v) (div_mod_inv s w)) :
 --   -- A ⨂ B = M

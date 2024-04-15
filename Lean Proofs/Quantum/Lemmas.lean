@@ -66,3 +66,12 @@ lemma if_true_false {p : Bool} :
   (if p then true else false) = p
   := by
     by_cases h : p <;> simp [h]
+
+lemma false_of_mem_Fin_zero (a : Fin 0) :
+  False
+  := by
+    have : a.val < 0 := a.isLt
+    rw [@Nat.lt_iff_le_and_ne] at this
+    rcases this with ⟨h₁, h₂⟩
+    apply Nat.eq_zero_of_le_zero at h₁
+    exact h₂ h₁
