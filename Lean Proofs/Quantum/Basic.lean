@@ -294,6 +294,14 @@ lemma modNat_div_mod_inv {a b : ℕ} {q : Fin a} {r : Fin b} :
       Nat.mod_eq_of_lt r.isLt,
     ]
 
+lemma eq_of_div_eq_div_and_mod_eq_mod {a b : ℕ} {x y : Fin (a * b)} (hdiv : x.divNat = y.divNat) (hmod : x.modNat = y.modNat) :
+  x = y
+  := by
+    simp [Fin.divNat] at hdiv
+    simp [Fin.modNat] at hmod
+    apply Fin.ext
+    rw [← Nat.div_add_mod ↑x b, ← Nat.div_add_mod ↑y b, hdiv, hmod]
+
 -- theorem tens_ext {M : QMatrix (m*p) (n*q)} (h : ∀ (r : Fin m) (s : Fin n) (v : Fin p) (w : Fin q), A r s * B v w = M (div_mod_inv r v) (div_mod_inv s w)) :
 --   -- A ⨂ B = M
 --   M = A ⨂ B
@@ -746,3 +754,32 @@ lemma sqrt_two_div_two_sq :
   Real.sqrt 2 / 2 * (Real.sqrt 2 / 2) = 1 / 2
   := by
     simp only [Real.sqrt_div_self', one_div, ← mul_inv, Nat.ofNat_nonneg, Real.mul_self_sqrt]
+
+lemma Finset.sum_Fin_mul {α : Type} [AddCommMonoid α] {a b : ℕ} (f : Fin a → Fin b → α) :
+  (∑ x : Fin (a * b), f (Fin.divNat x) (Fin.modNat x)) = (∑ x : Fin a, ∑ y : Fin b, f x y)
+  := by
+    rw [← Fintype.sum_prod_type']
+    let g (x : Fin (a * b)) : Fin a × Fin b := ⟨Fin.divNat x, Fin.modNat x⟩
+    let AB : Finset (Fin (a * b)) := univ
+    have : univ (α := Fin a × Fin b) = image g AB := by
+      unfold_let g AB
+      rw [ext_iff]
+      intro x
+      constructor
+      · intro
+        rw [mem_image]
+        use div_mod_inv x.1 x.2
+        constructor
+        · simp only [mem_univ]
+        rw [divNat_div_mod_inv, modNat_div_mod_inv]
+      · intro hx
+        rw [mem_image] at hx
+        rcases hx with ⟨y, ⟨_, hxy⟩⟩
+        rw [← hxy]
+        simp only [mem_univ]
+    simp only [this]
+    rw [sum_image]
+    intro x _ y _ h
+    simp [g] at h
+    rcases h with ⟨left, right⟩
+    exact eq_of_div_eq_div_and_mod_eq_mod left right
