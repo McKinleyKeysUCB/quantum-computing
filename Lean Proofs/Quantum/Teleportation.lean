@@ -556,7 +556,17 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : Qubit × RNG :=
    - Z Gate
    -/
   
-  let result₂ := if b then Z * result₁ else result₁
+  let result₂ := if a then Z * result₁ else result₁
+  
+  have hresult₂ : result₂ = α•|0⟩ + β•|1⟩
+  := by
+    unfold_let result₂
+    rw [hresult₁]
+    by_cases ha : a
+    · simp only [if_pos ha]
+      rw [Z_mul_qubit', sub_eq_add_neg, ← neg_smul, neg_neg]
+    · simp only [if_neg ha]
+      
   
   
   ⟨result₂, rng₂⟩
