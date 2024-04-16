@@ -75,3 +75,20 @@ lemma false_of_mem_Fin_zero (a : Fin 0) :
     rcases this with ⟨h₁, h₂⟩
     apply Nat.eq_zero_of_le_zero at h₁
     exact h₂ h₁
+
+lemma one_div_sqrt_two_sq :
+  (1/√2) * (1/√2) = 1/2
+  := by
+    rw [
+      div_mul_div_comm,
+      one_mul,
+      ← sq _,
+      Complex.ofReal_eq_coe,
+      ← Complex.ofReal_pow,
+    ]
+    simp only [Nat.ofNat_nonneg, Real.sq_sqrt, Complex.ofReal_ofNat, one_div]
+
+lemma if_then_self_else_not_self {P : Prop} [Decidable P] :
+  if P then P else ¬P
+  := by
+    simp only [ite_prop_iff_or, and_self, em]

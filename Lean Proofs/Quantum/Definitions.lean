@@ -33,6 +33,8 @@ def QMatrix.adjoint {m n : ℕ} (M : QMatrix m n) : QMatrix n m :=
 
 notation M "†" => QMatrix.adjoint M
 
+notation M "ᵀ" => Matrix.transpose M
+
 noncomputable
 def norm (φ : Qubit) :=
   (Complex.normSq φ.α + Complex.normSq φ.β).sqrt
@@ -436,12 +438,13 @@ section SquareMatrixProperties
 variable {n : ℕ} (M : QSquare n)
 
 @[simp]
+def QSquare.symmetric := Mᵀ = M
+
+@[simp]
 def QSquare.hermitian := M = M†
 
 @[simp]
 def QSquare.normal := M† * M = M * M†
-
--- def QMatrix.symmetric := M = M^T
 
 end SquareMatrixProperties
 
@@ -457,5 +460,8 @@ variable {m n : ℕ} (M : QMatrix m n)
 
 @[simp, reducible]
 def QMatrix.unitary := M† * M = 1
+
+@[simp]
+def QMatrix.real := ∀ (i : Fin m) (j : Fin n), star (M i j) = M i j
 
 end MatrixProperties

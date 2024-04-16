@@ -8,11 +8,6 @@ import Quantum.Lemmas
 
 open BigOperators
 
-lemma one_div_sqrt_two_sq :
-  (1/√2) * (1/√2) = 1/2
-  := by
-    sorry
-
 lemma decompose_qubit_into_Z_basis (φ : Qubit) :
   φ = φ.α • |0⟩ + φ.β • |1⟩
   := by
@@ -566,6 +561,13 @@ lemma one_tens {m n : ℕ} {M : QMatrix m n} :
       assumption
     }
 
+lemma transpose_tens {m₁ n₁ m₂ n₂} {A : QMatrix m₁ n₁} {B : QMatrix m₂ n₂} :
+  (A ⨂ B)ᵀ = Aᵀ ⨂ Bᵀ
+  := by
+    apply Matrix.ext
+    intros
+    simp only [tens, Matrix.transpose_apply, Matrix.of_apply]
+
 @[simp]
 lemma CNOT_mul_ket0_tens {φ : Qubit} :
   CNOT * (|0⟩ ⨂ φ) = |0⟩ ⨂ φ
@@ -721,13 +723,6 @@ lemma H_mul_ket1 :
     simp
 
 
-@[simp]
-lemma proj_hermitian {m n : ℕ} {M : QMatrix m n} :
-  QSquare.hermitian (M * M†)
-  := by
-    simp
-
-
 /-
  - Unitaries
  -/
@@ -797,3 +792,63 @@ lemma sqrt_two_div_two_sq :
   Real.sqrt 2 / 2 * (Real.sqrt 2 / 2) = 1 / 2
   := by
     simp only [Real.sqrt_div_self', one_div, ← mul_inv, Nat.ofNat_nonneg, Real.mul_self_sqrt]
+
+
+/-
+ - Hermitian
+ -/
+
+lemma hermitian_of_symm_of_real {n : ℕ} {M : QSquare n} (hs : M.symmetric) (hr : M.real) :
+  M.hermitian
+  := by
+    unfold QSquare.hermitian QMatrix.adjoint
+    unfold QSquare.symmetric Matrix.transpose at hs
+    unfold QMatrix.real at hr
+    apply Matrix.ext_iff.mpr at hs
+    apply Matrix.ext
+    intro i j
+    specialize hs i j
+    specialize hr j i
+    rw [Matrix.of_apply] at hs
+    rw [hr, hs]
+
+lemma X_symm :
+  X.symmetric
+  := by
+    apply Matrix.ext
+    simp only [Matrix.transpose_apply, X, Eq.comm, forall_const]
+lemma X_real :
+  X.real
+  := by
+    simp only [QMatrix.real, X, Complex.star_def, RingHom.map_ite_zero_one, forall_const]
+lemma X_hermitian :
+  X.hermitian
+  := hermitian_of_symm_of_real X_symm X_real
+
+lemma Z_symm :
+  Z.symmetric
+  := by
+    apply Matrix.ext
+    simp only [Matrix.transpose_apply, Z, Eq.comm, Fin.isValue]
+    intro i j
+    rw [apply_ite₂ (· = ·)]
+    by_cases h : i = j
+    · simp only [h, ↓reduceIte, Fin.isValue]
+    · rw [if_neg h]
+lemma Z_real :
+  Z.real
+  := by
+    simp [QMatrix.real, Z, Complex.star_def, RingHom.map_ite_zero_one, forall_const]
+    intro i j
+    by_cases h : i = j
+    · simp only [h, ↓reduceIte, Fin.isValue, apply_ite, map_one, map_neg, ite_eq_left_iff, neg_eq_self_iff, one_ne_zero, imp_false, not_not, ite_eq_right_iff, eq_neg_self_iff, if_then_self_else_not_self]
+    · simp only [h, ↓reduceIte, map_zero]
+lemma Z_hermitian :
+  Z.hermitian
+  := hermitian_of_symm_of_real Z_symm Z_real
+
+@[simp]
+lemma proj_hermitian {m n : ℕ} {M : QMatrix m n} :
+  QSquare.hermitian (M * M†)
+  := by
+    simp
