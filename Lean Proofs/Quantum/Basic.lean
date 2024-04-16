@@ -181,6 +181,59 @@ lemma proj1_mul_ket1 :
   :=
     proj_mul_self ket1_unitary
 
+lemma zero_proj_phi {φ : Qubit} :
+  |0⟩⟨0| * φ = φ.α • |0⟩
+  := by
+    nth_rw 1 [decompose_qubit_into_Z_basis φ]
+    simp only [Matrix.mul_add, Matrix.mul_smul, proj0_mul_ket0, proj0_mul_ket1, smul_zero, add_zero, Qubit.α]
+lemma one_proj_phi {φ : Qubit} :
+  |1⟩⟨1| * φ = φ.β • |1⟩
+  := by
+    nth_rw 1 [decompose_qubit_into_Z_basis φ]
+    simp only [Matrix.mul_add, Matrix.mul_smul, proj1_mul_ket0, proj1_mul_ket1, smul_zero, zero_add, Qubit.β]
+@[simp]
+lemma zero_proj_phi' {φ : Qubit} :
+  QMatrix.toReal ((|0⟩⟨0| * φ)† * (|0⟩⟨0| * φ)) = ‖φ.α‖
+  := by
+    rw [
+      zero_proj_phi,
+      adjoint_smul,
+      Matrix.smul_mul,
+      Matrix.mul_smul,
+      smul_smul,
+      ket0_unitary,
+      QMatrix.toReal,
+      Matrix.smul_apply,
+      Matrix.one_apply,
+      if_pos rfl,
+      smul_eq_mul,
+      mul_one,
+      Complex.star_def,
+      ← Complex.normSq_eq_conj_mul_self,
+      Complex.ofReal_re,
+    ]
+@[simp]
+lemma one_proj_phi' {φ : Qubit} :
+  QMatrix.toReal ((|1⟩⟨1| * φ)† * (|1⟩⟨1| * φ)) = ‖φ.β‖
+  := by
+    rw [
+      one_proj_phi,
+      adjoint_smul,
+      Matrix.smul_mul,
+      Matrix.mul_smul,
+      smul_smul,
+      ket1_unitary,
+      QMatrix.toReal,
+      Matrix.smul_apply,
+      Matrix.one_apply,
+      if_pos rfl,
+      smul_eq_mul,
+      mul_one,
+      Complex.star_def,
+      ← Complex.normSq_eq_conj_mul_self,
+      Complex.ofReal_re,
+    ]
+
 lemma ket_plus_eq_ket0_plus_ket1 :
   |+⟩ = (1/√2) • (|0⟩ + |1⟩)
   := by
@@ -414,8 +467,7 @@ lemma Finset.sum_Fin_mul {α : Type} [AddCommMonoid α] {a b : ℕ} (f : Fin a �
     exact eq_of_div_eq_div_and_mod_eq_mod left right
 
 -- theorem tens_ext {M : QMatrix (m*p) (n*q)} (h : ∀ (r : Fin m) (s : Fin n) (v : Fin p) (w : Fin q), A r s * B v w = M (div_mod_inv r v) (div_mod_inv s w)) :
---   -- A ⨂ B = M
---   M = A ⨂ B
+--   A ⨂ B = M
 --   := by
 --     sorry
 
@@ -890,3 +942,41 @@ lemma proj_hermitian {m n : ℕ} {M : QMatrix m n} :
   QSquare.hermitian (M * M†)
   := by
     simp
+
+
+lemma Qmeasure0 {φ : Qubit} :
+  ℙ[Zmeasure φ ≡ |0⟩] = ‖φ.α‖
+  := by
+    unfold Zmeasure Qmeasure_single_qubit
+    simp only [probability_congruent, instMonadRandom, Random, zero_proj_phi', one_div,
+      Complex.ofReal_inv, one_proj_phi', Random.bind, Random.pure, is_congruent, mul_ite, mul_one,
+      mul_zero]
+    rw [zero_proj_phi, one_proj_phi]
+    simp only [probability_congruent, Random.bind, Random.pure, is_congruent, Matrix.smul_of, Fin.isValue, mul_ite, mul_one, mul_zero]
+    nth_rw 2 [if_neg]
+    rw [add_zero]
+    by_cases hα : φ.α = 0
+    · rw [if_neg]
+      · simp only [hα, map_zero]
+      rw [hα, Complex.normSq_zero, Real.sqrt_zero]
+      simp only [Complex.ofReal_zero, inv_zero, Fin.isValue, zero_smul, smul_zero, Matrix.of_zero]
+      apply ncong_zero_of_ne_zero
+      apply QMatrix.ne_zero_of_element_ne_zero 0 0
+      rw [ket0]
+      simp only [Fin.isValue, Matrix.of_apply, ↓reduceIte, ne_eq, one_ne_zero, not_false_eq_true]
+    · rw [if_pos]
+      rw [smul_smul]
+      apply cong_smul_self
+      rw [
+        Complex.normSq_mul,
+        Complex.normSq_inv,
+        Complex.normSq_ofReal,
+        Real.mul_self_sqrt (Complex.normSq_nonneg _),
+        inv_mul_eq_div,
+        ← Complex.normSq_div,
+        div_self hα,
+      ]
+      apply map_one
+    rw [smul_smul]
+    apply ncong_smul_of_ncong
+    exact ket0_ncong_ket1
