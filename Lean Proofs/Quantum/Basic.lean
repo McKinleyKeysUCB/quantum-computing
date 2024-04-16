@@ -977,5 +977,28 @@ lemma Qmeasure0 {φ : Qubit} :
       ]
       apply map_one
     rw [smul_smul]
-    apply ncong_smul_of_ncong
-    exact ket0_ncong_ket1
+    by_cases hβ : φ.β = 0
+    · rw [
+        hβ,
+        Complex.normSq_zero,
+        Real.sqrt_zero,
+        Complex.ofReal_zero,
+        Complex.inv_zero,
+        zero_mul,
+        zero_smul,
+        Matrix.of_zero,
+      ]
+      apply ncong_zero_of_ne_zero
+      rw [Ne, ← Matrix.ext_iff, not_forall₂]
+      use 0
+      use 0
+      simp only [Fin.isValue, Matrix.of_apply, ↓reduceIte, Matrix.zero_apply, one_ne_zero, not_false_eq_true]
+    · apply ncong_smul_of_ncong
+      · simp only [map_mul, map_inv₀, Complex.normSq_ofReal, mul_inv_rev, ← sq]
+        rw [
+          Real.sq_sqrt (Complex.normSq_nonneg _),
+          (inv_mul_eq_one₀ _).mpr rfl,
+        ]
+        rw [Ne, Complex.normSq_eq_zero]
+        exact hβ
+      · exact ket0_ncong_ket1
