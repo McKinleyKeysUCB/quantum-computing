@@ -95,3 +95,20 @@ lemma if_then_self_else_not_self {P : Prop} [Decidable P] :
   if P then P else ¬P
   := by
     simp only [ite_prop_iff_or, and_self, em]
+
+lemma not_forall₂ {α β : Type} {P : α → β → Prop} :
+  (¬∀ (x : α) (y : β), P x y) ↔ ∃ (x : α), ∃ (y : β), ¬P x y
+  := by
+    rw [not_forall]
+    constructor
+    · intro h
+      rcases h with ⟨x, h⟩
+      rw [not_forall] at h
+      rcases h with ⟨y, h⟩
+      use x
+      use y
+    · intro h
+      rcases h with ⟨x, ⟨y, h⟩⟩
+      use x
+      rw [not_forall]
+      use y

@@ -4,6 +4,7 @@ import Mathlib.Data.Real.Basic
 import Mathlib.Data.Real.Sqrt
 import Mathlib.Data.Complex.Basic
 import Quantum.Definitions
+import Quantum.Congruence
 
 open BigOperators
 
