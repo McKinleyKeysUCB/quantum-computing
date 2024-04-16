@@ -6,6 +6,7 @@ import Mathlib.Init.Data.Nat.Notation
 import Mathlib.Data.Nat.Defs
 import Mathlib.Data.Real.Sqrt
 import Mathlib.Data.Complex.Basic
+import Mathlib.Data.Matrix.Basic
 
 notation "√" a => Complex.ofReal (Real.sqrt a)
 
@@ -112,3 +113,8 @@ lemma not_forall₂ {α β : Type} {P : α → β → Prop} :
       use x
       rw [not_forall]
       use y
+
+lemma Matrix.ne_zero_of_element_ne_zero {m n α : Type} [Zero α] {M : Matrix m n α} (i : m) (j : n) (hij : M i j ≠ 0) :
+  M ≠ 0
+  := by
+    exact fun a => hij (congrFun (congrFun a i) j)

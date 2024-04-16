@@ -260,27 +260,6 @@ def Qmeasure' (φ : Qubit) : Random Qubit :=
   fun f => ‖φ.α‖ * f |0⟩ + ‖φ.β‖ * f |1⟩
 
 
-
-lemma zero_smul_zero :
-  (0 : ℝ) • (0 : QMatrix 2 1) = (0 : QMatrix 2 1)
-  := by
-    rw [← @Matrix.ext_iff]
-    intros
-    simp
-
-lemma QMatrix.ne_zero_of_element_ne_zero {m n : ℕ} {A : QMatrix m n} (i : Fin m) (j : Fin n) (hij : A i j ≠ 0) :
-  A ≠ 0
-  := by
-    exact fun a => hij (congrFun (congrFun a i) j)
-
-lemma real_smul {r : ℝ} {m n : ℕ} {A : QMatrix m n} :
-  r • A = (Complex.ofReal' r) • A
-  := by
-    apply Matrix.ext
-    intro i j
-    simp [Matrix.smul_apply]
-
-
 /-
  - Square Matrix Properties
  -/

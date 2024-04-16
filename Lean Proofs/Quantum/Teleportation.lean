@@ -21,49 +21,6 @@ def Qmeasure₁_rng := Qmeasure₃₁_rng
 def extract₂ (state : Qubits 3) : Qubit :=
   ((⟨00| + ⟨01| + ⟨10| + ⟨11|) ⨂ I₂) * state
 
-def entangle_ket00 :
-  CNOT * (H ⨂ I₂) * |00⟩ = |Φ+⟩
-  := by
-    rw [
-      Matrix.mul_assoc,
-      ← ket0_tens_ket0,
-      tens_mul_tens,
-      H_mul_ket0,
-      I₂,
-      Matrix.one_mul,
-      ket_plus_eq_ket0_plus_ket1,
-      smul_tens,
-      add_tens,
-      Matrix.mul_smul,
-      Matrix.mul_add,
-      CNOT_mul_ket0_tens,
-      CNOT_mul_ket1_tens,
-      X_mul_ket0,
-      ket0_tens_ket0,
-      ket1_tens_ket1,
-    ]
-def entangle_ket00' :
-  CNOT' * (I₂ ⨂ H) * |00⟩ = |Φ+⟩
-  := by
-    rw [
-      Matrix.mul_assoc,
-      ← ket0_tens_ket0,
-      tens_mul_tens,
-      H_mul_ket0,
-      I₂,
-      Matrix.one_mul,
-      ket_plus_eq_ket0_plus_ket1,
-      tens_smul,
-      tens_add,
-      Matrix.mul_smul,
-      Matrix.mul_add,
-      CNOT'_mul_tens_ket0,
-      CNOT'_mul_tens_ket1,
-      X_mul_ket0,
-      ket0_tens_ket0,
-      ket1_tens_ket1,
-    ]
-
 noncomputable
 def teleport_random (φ : Qubit) : Random Qubit := do
   let state₀ := φ ⨂ |00⟩

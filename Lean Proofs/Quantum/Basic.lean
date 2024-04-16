@@ -961,7 +961,7 @@ lemma Qmeasure0 {φ : Qubit} :
       rw [hα, Complex.normSq_zero, Real.sqrt_zero]
       simp only [Complex.ofReal_zero, inv_zero, Fin.isValue, zero_smul, smul_zero, Matrix.of_zero]
       apply ncong_zero_of_ne_zero
-      apply QMatrix.ne_zero_of_element_ne_zero 0 0
+      apply Matrix.ne_zero_of_element_ne_zero 0 0
       rw [ket0]
       simp only [Fin.isValue, Matrix.of_apply, ↓reduceIte, ne_eq, one_ne_zero, not_false_eq_true]
     · rw [if_pos]
@@ -1003,3 +1003,52 @@ lemma Qmeasure0 {φ : Qubit} :
         rw [Ne, Complex.normSq_eq_zero]
         exact hβ
       · exact ket0_ncong_ket1
+
+
+/-
+ - Entanglement
+ -/
+
+lemma entangle_ket00 :
+  CNOT * (H ⨂ I₂) * |00⟩ = |Φ+⟩
+  := by
+    rw [
+      Matrix.mul_assoc,
+      ← ket0_tens_ket0,
+      tens_mul_tens,
+      H_mul_ket0,
+      I₂,
+      Matrix.one_mul,
+      ket_plus_eq_ket0_plus_ket1,
+      smul_tens,
+      add_tens,
+      Matrix.mul_smul,
+      Matrix.mul_add,
+      CNOT_mul_ket0_tens,
+      CNOT_mul_ket1_tens,
+      X_mul_ket0,
+      ket0_tens_ket0,
+      ket1_tens_ket1,
+    ]
+
+lemma entangle_ket00' :
+  CNOT' * (I₂ ⨂ H) * |00⟩ = |Φ+⟩
+  := by
+    rw [
+      Matrix.mul_assoc,
+      ← ket0_tens_ket0,
+      tens_mul_tens,
+      H_mul_ket0,
+      I₂,
+      Matrix.one_mul,
+      ket_plus_eq_ket0_plus_ket1,
+      tens_smul,
+      tens_add,
+      Matrix.mul_smul,
+      Matrix.mul_add,
+      CNOT'_mul_tens_ket0,
+      CNOT'_mul_tens_ket1,
+      X_mul_ket0,
+      ket0_tens_ket0,
+      ket1_tens_ket1,
+    ]
