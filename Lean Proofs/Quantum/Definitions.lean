@@ -6,7 +6,12 @@ import Mathlib.Data.Complex.Basic
 import Quantum.Probability
 import Quantum.Lemmas
 
-open BigOperators Nat
+open BigOperators
+
+
+/-
+ - Basic Definitions
+ -/
 
 @[reducible]
 def QMatrix (m n : ℕ) := Matrix (Fin m) (Fin n) ℂ
@@ -25,14 +30,20 @@ def Qubit.α (φ : Qubit) := φ 0 0
 @[reducible]
 def Qubit.β (φ : Qubit) := φ 1 0
 
-@[simp]
-def QMatrix.adjoint {m n : ℕ} (M : QMatrix m n) : QMatrix n m :=
-  fun i j =>
-    star (M j i)
 
-notation M "†" => QMatrix.adjoint M
+/-
+ - `QMatrix → ℝ` Coercion
+ -/
+def QMatrix.toReal (M : QMatrix 1 1) : ℝ :=
+  (M 0 0).re
 
-notation M "ᵀ" => Matrix.transpose M
+instance : Coe (QMatrix 1 1) ℝ where
+  coe M := M.toReal
+
+
+/-
+ - Norm
+ -/
 
 noncomputable
 def norm (φ : Qubit) :=
@@ -40,6 +51,24 @@ def norm (φ : Qubit) :=
 
 notation:70 "|" φ "|" => norm φ
 notation:70 "‖" φ "‖" => Complex.normSq φ
+
+
+/-
+ - Adjoint & Transpose
+ -/
+
+@[simp]
+def QMatrix.adjoint {m n : ℕ} (M : QMatrix m n) : QMatrix n m :=
+  fun i j =>
+    star (M j i)
+
+notation M "†" => QMatrix.adjoint M
+notation M "ᵀ" => Matrix.transpose M
+
+
+/-
+ - Basic Qubits
+ -/
 
 @[reducible]
 def ket0 : Qubit :=
@@ -124,22 +153,20 @@ notation "|Ψ+⟩" => ket_Psi_plus
 notation "|Ψ-⟩" => ket_Psi_minus
 
 
+/-
+ - Operations
+ -/
+
 def I₂ : QSquare 2 := 1
 
 def X : QSquare 2 :=
   fun i j =>
-    if i = j then
-      0
-    else
-      1
+    if i = j then 0 else 1
 
 def Z : QSquare 2 :=
   fun i j =>
     if i = j then
-      if i = 0 then
-        1
-      else
-        -1
+      if i = 0 then 1 else -1
     else
       0
 
@@ -147,14 +174,16 @@ def Z : QSquare 2 :=
 noncomputable
 def H : QSquare 2 :=
   (1/√2) • Matrix.of (fun i j =>
-    if i = 0 ∨ j = 0 then
-      1
-    else
-      -1
+    if i = 0 ∨ j = 0 then 1 else -1
   )
 
 notation "|0⟩⟨0|" => |0⟩ * ⟨0|
 notation "|1⟩⟨1|" => |1⟩ * ⟨1|
+
+
+/-
+ - Tensor Product
+ -/
 
 @[simp]
 def tens {m₁ n₁ m₂ n₂ : ℕ} (A : QMatrix m₁ n₁) (B : QMatrix m₂ n₂) :
@@ -166,6 +195,11 @@ def tens {m₁ n₁ m₂ n₂ : ℕ} (A : QMatrix m₁ n₁) (B : QMatrix m₂ n
 
 infixl:70 " ⨂ " => tens
 
+
+/-
+ - CNOT
+ -/
+
 @[reducible]
 def CNOT : QSquare 4 :=
   |0⟩⟨0| ⨂ I₂ + |1⟩⟨1| ⨂ X
@@ -173,17 +207,6 @@ def CNOT : QSquare 4 :=
 @[reducible]
 def CNOT' : QSquare 4 :=
   I₂ ⨂ |0⟩⟨0| + X ⨂ |1⟩⟨1|
-
-@[simp]
-def zero_proj : QMatrix 2 2 := |0⟩ * ⟨0|
-@[simp]
-def one_proj : QMatrix 2 2 := |1⟩ * ⟨1|
-
-def QMatrix.toReal (M : QMatrix 1 1) : ℝ :=
-  (M 0 0).re
-
-instance : Coe (QMatrix 1 1) ℝ where
-  coe M := M.toReal
 
 
 /-
@@ -198,12 +221,12 @@ notation:80 a " ≢ " b => ¬QVector.congruent a b
 
 
 /-
- - Measurement
+ - Measurement Using the `Random` Monad
  -/
 
 @[simp]
 noncomputable
-def Qmeasure_general {n m : ℕ} (φ : QVector n) (M : Fin m → QSquare n) : Random (QVector n) :=
+def Qmeasure {n m : ℕ} (φ : QVector n) (M : Fin m → QSquare n) : Random (QVector n) :=
   fun f =>
     ∑ i : Fin m,
       let Mᵢ := M i
@@ -213,15 +236,26 @@ def Qmeasure_general {n m : ℕ} (φ : QVector n) (M : Fin m → QSquare n) : Ra
 
 @[simp]
 noncomputable
-def Qmeasure_single_qubit {n : ℕ} (φ : QVector n) (M₀ M₁ : QSquare n) : Random (Bool × QVector n) :=
+def Qmeasure_qubit {n : ℕ} (φ : QVector n) (M₀ M₁ : QSquare n) : Random (Bool × QVector n) :=
   let p₀ : [0,1] := (M₀ * φ)† * (M₀ * φ)
   let φ₀ := Complex.ofReal' (1 / p₀.sqrt) • (M₀ * φ)
   let p₁ : [0,1] := (M₁ * φ)† * (M₁ * φ)
   let φ₁ := Complex.ofReal' (1 / p₁.sqrt) • (M₁ * φ)
   fun f => p₀ * f ⟨false, φ₀⟩ + p₁ * f ⟨true, φ₁⟩
 
+/-- Measures a qubit in the Z basis. -/
 noncomputable
-def Qmeasure_single_qubit_rng {n : ℕ} (φ : QVector n) (M₀ M₁ : QSquare n) (rng : RNG) : (Bool × QVector n) × RNG :=
+def Zmeasure (φ : Qubit) : Random (Qubit) := do
+  let result ← Qmeasure_qubit φ |0⟩⟨0| |1⟩⟨1|
+  pure result.2
+
+
+/-
+ - Measurement Using `RNG`-Based Randomness
+ -/
+
+noncomputable
+def Qmeasure_qubit_rng {n : ℕ} (φ : QVector n) (M₀ M₁ : QSquare n) (rng : RNG) : (Bool × QVector n) × RNG :=
   let p₀ : [0,1] := (M₀ * φ)† * (M₀ * φ)
   let φ₀ := Complex.ofReal' (1 / p₀.sqrt) • (M₀ * φ)
   let p₁ : [0,1] := (M₁ * φ)† * (M₁ * φ)
@@ -231,33 +265,6 @@ def Qmeasure_single_qubit_rng {n : ℕ} (φ : QVector n) (M₀ M₁ : QSquare n)
     ⟨⟨true, φ₁⟩, rng⟩
   else
     ⟨⟨false, φ₀⟩, rng⟩
-
-@[simp]
-noncomputable
-def Qmeasure₃₀ (φ : QVector 8) : Random (Bool × QVector 8) :=
-  Qmeasure_single_qubit φ (|0⟩⟨0| ⨂ I₂ ⨂ I₂) (|1⟩⟨1| ⨂ I₂ ⨂ I₂)
-
-@[simp]
-noncomputable
-def Qmeasure₃₁ (φ : QVector 8) : Random (Bool × QVector 8) :=
-  Qmeasure_single_qubit φ (I₂ ⨂ |0⟩⟨0| ⨂ I₂) (I₂ ⨂ |1⟩⟨1| ⨂ I₂)
-
-noncomputable
-def Qmeasure₃₀_rng (φ : QVector 8) (rng : RNG) : (Bool × QVector 8) × RNG :=
-  Qmeasure_single_qubit_rng φ (|0⟩⟨0| ⨂ I₂ ⨂ I₂) (|1⟩⟨1| ⨂ I₂ ⨂ I₂) rng
-
-noncomputable
-def Qmeasure₃₁_rng (φ : QVector 8) (rng : RNG) : (Bool × QVector 8) × RNG :=
-  Qmeasure_single_qubit_rng φ (I₂ ⨂ |0⟩⟨0| ⨂ I₂) (I₂ ⨂ |1⟩⟨1| ⨂ I₂) rng
-
-@[simp]
-noncomputable
-def Zmeasure (φ : Qubit) : Random (Qubit) := do
-  let result ← Qmeasure_single_qubit φ |0⟩⟨0| |1⟩⟨1|
-  pure result.2
-
-def Qmeasure' (φ : Qubit) : Random Qubit :=
-  fun f => ‖φ.α‖ * f |0⟩ + ‖φ.β‖ * f |1⟩
 
 
 /-
@@ -278,7 +285,6 @@ def QSquare.hermitian := M = M†
 def QSquare.normal := M† * M = M * M†
 
 end SquareMatrixProperties
-
 
 
 /-

@@ -6,23 +6,45 @@ import Quantum.Basic
  -/
 set_option maxHeartbeats 500000
 
+
+/-
+ - Helper Definitions
+ -/
+
 def CNOT₂₁ := I₂ ⨂ CNOT'
 def CNOT₀₁ := CNOT ⨂ I₂
 
+/-- Measures the 0-th qubit in a state of 3 qubits. Uses the `Random` monad. -/
 noncomputable
-def Qmeasure₀ := Qmeasure₃₀
-noncomputable
-def Qmeasure₁ := Qmeasure₃₁
-noncomputable
-def Qmeasure₀_rng := Qmeasure₃₀_rng
-noncomputable
-def Qmeasure₁_rng := Qmeasure₃₁_rng
+def Qmeasure₀ (φ : Qubits 3) : Random (Bool × Qubits 3) :=
+  Qmeasure_qubit φ (|0⟩⟨0| ⨂ I₂ ⨂ I₂) (|1⟩⟨1| ⨂ I₂ ⨂ I₂)
 
+/-- Measures the 1-th qubit in a state of 3 qubits. Uses the `Random` monad. -/
+noncomputable
+def Qmeasure₁ (φ : Qubits 3) : Random (Bool × Qubits 3) :=
+  Qmeasure_qubit φ (I₂ ⨂ |0⟩⟨0| ⨂ I₂) (I₂ ⨂ |1⟩⟨1| ⨂ I₂)
+
+/-- Measures the 0-th qubit in a state of 3 qubits. Uses `RNG`-based randomness. -/
+noncomputable
+def Qmeasure₀_rng (φ : Qubits 3) (rng : RNG) : (Bool × Qubits 3) × RNG :=
+  Qmeasure_qubit_rng φ (|0⟩⟨0| ⨂ I₂ ⨂ I₂) (|1⟩⟨1| ⨂ I₂ ⨂ I₂) rng
+
+/-- Measures the 1-th qubit in a state of 3 qubits. Uses `RNG`-based randomness. -/
+noncomputable
+def Qmeasure₁_rng (φ : Qubits 3) (rng : RNG) : (Bool × Qubits 3) × RNG :=
+  Qmeasure_qubit_rng φ (I₂ ⨂ |0⟩⟨0| ⨂ I₂) (I₂ ⨂ |1⟩⟨1| ⨂ I₂) rng
+
+/-- Extracts the 2-th qubit from a state of 3 qubits. -/
 def extract₂ (state : Qubits 3) : Qubit :=
   ((⟨00| + ⟨01| + ⟨10| + ⟨11|) ⨂ I₂) * state
 
+
+/-
+ - An implementation of quantum teleportation using the `Random` monad.
+ -/
+ 
 noncomputable
-def teleport_random (φ : Qubit) : Random Qubit := do
+def teleport (φ : Qubit) : Random Qubit := do
   let state₀ := φ ⨂ |00⟩
   let state₁ := CNOT₂₁ * (I₂ ⨂ I₂ ⨂ H) * state₀
   let state₂ := (H ⨂ I₂ ⨂ I₂) * CNOT₀₁ * state₁
@@ -35,9 +57,18 @@ def teleport_random (φ : Qubit) : Random Qubit := do
     result := Z * result
   pure result
 
+
+/-
+ - An implementation of quantum teleportation using `RNG`-based randomness.
+ -/
+
+/-- The return type of `teleport_rng`. `φ` is Alice's qubit. -/
 structure TeleportRNGResult (φ : Qubit) where
+  /-- Bob's qubit, after teleportation. -/
   ψ : Qubit
+  /-- A proof that Bob's qubit is the same as Alice's original qubit. -/
   hφ : ψ = φ
+  /-- The random number generator. -/
   rng : RNG
 
 noncomputable
@@ -328,7 +359,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
       norm_num
   have ha : a = (rng.flip (1/2)).1 := by
     unfold_let a first_measurement
-    unfold Qmeasure₀_rng Qmeasure₃₀_rng Qmeasure_single_qubit_rng
+    unfold Qmeasure₀_rng Qmeasure_qubit_rng
     simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
     simp only [apply_ite Prod.fst, apply_ite Prod.snd]
     rw [if_true_false]
@@ -340,7 +371,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
   := by
     unfold_let state₃
     unfold_let first_measurement at a ⊢
-    unfold Qmeasure₀_rng Qmeasure₃₀_rng Qmeasure_single_qubit_rng
+    unfold Qmeasure₀_rng Qmeasure_qubit_rng
     simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
     simp only [apply_ite Prod.fst, apply_ite Prod.snd]
     rw [← ha]
@@ -437,7 +468,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
       }
   have hb : b = (rng₁.flip (1/2)).1 := by
     unfold_let b second_measurement
-    unfold Qmeasure₁_rng Qmeasure₃₁_rng Qmeasure_single_qubit_rng
+    unfold Qmeasure₁_rng Qmeasure_qubit_rng
     simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
     simp only [apply_ite Prod.fst, apply_ite Prod.snd]
     rw [if_true_false]
@@ -455,7 +486,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
   := by
     unfold_let state₄
     unfold_let second_measurement at b ⊢
-    unfold Qmeasure₁_rng Qmeasure₃₁_rng Qmeasure_single_qubit_rng
+    unfold Qmeasure₁_rng Qmeasure_qubit_rng
     simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
     simp only [apply_ite Prod.fst, apply_ite Prod.snd]
     rw [← hb]

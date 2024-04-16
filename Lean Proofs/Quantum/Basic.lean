@@ -947,7 +947,7 @@ lemma proj_hermitian {m n : ℕ} {M : QMatrix m n} :
 lemma Qmeasure0 {φ : Qubit} :
   ℙ[Zmeasure φ ≡ |0⟩] = ‖φ.α‖
   := by
-    unfold Zmeasure Qmeasure_single_qubit
+    unfold Zmeasure Qmeasure_qubit
     simp only [probability_congruent, instMonadRandom, Random, zero_proj_phi', one_div,
       Complex.ofReal_inv, one_proj_phi', Random.bind, Random.pure, is_congruent, mul_ite, mul_one,
       mul_zero]
