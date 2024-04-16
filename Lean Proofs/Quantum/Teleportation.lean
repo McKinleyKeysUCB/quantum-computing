@@ -409,12 +409,6 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
   
   let proj0 := (I₂ ⨂ |0⟩⟨0| ⨂ I₂) * state₃
   let proj1 := (I₂ ⨂ |1⟩⟨1| ⨂ I₂) * state₃
-  /-
-    if a then
-      (1/√2) • (|10⟩ ⨂ (α•|0⟩ - β•|1⟩) + |11⟩ ⨂ (-β•|0⟩ + α•|1⟩))
-    else
-      (1/√2) • (|00⟩ ⨂ (α•|0⟩ + β•|1⟩) + |01⟩ ⨂ (β•|0⟩ + α•|1⟩))
-   -/
   have hproj0 :
     proj0 =
       if a then
@@ -599,42 +593,3 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
     rw [← decompose_qubit_into_Z_basis φ]
   
   ⟨ψ, hψ, rng₂⟩
-
--- def mymul (a b : ℕ) := a * b
--- def myadd (a b : ℕ) := a + b
--- 
--- def blah (n : ℕ) :=
---   let a := mymul n 2
---   let b := myadd a 1
---   myadd a b
-
--- example {n : ℕ} :
---   blah n = myadd (mymul 4 n) 1
---   := by
---     unfold blah
---     rw?
-    
-    -- sorry
-    -- conv =>
-    --   lhs
-    --   intro a b
-    
-    -- show 1 + 1 = 2
-    -- sorry
-
-theorem quantum_teleportation {φ : Qubit} :
-  ℙ[teleport_random φ = φ] = 1
-  := by
-    unfold teleport_random probability_equals does_equal
-    -- simp [Qmeasure₀, I₂, X, Z, CNOT₀₁, CNOT₂₁]
-    
-    conv =>
-      lhs
-      arg 0
-      -- intro state₀
-    
-      -- arg 0
-      -- intro state₀
-      -- intro state₁
-      -- intro state₂
-    sorry

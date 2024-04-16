@@ -2,7 +2,7 @@
 import Quantum.Basic
 
 theorem no_cloning :
-  ¬∃ (U : QMatrix 4 4), ∀ (φ : Qubit), |φ| = 1 → U * (φ ⨂ |0⟩) = φ ⨂ φ
+  ¬∃ (U : QSquare 4), ∀ (φ : Qubit), |φ| = 1 → U * (φ ⨂ |0⟩) = φ ⨂ φ
   := by
     apply by_contradiction
     rw [not_not]

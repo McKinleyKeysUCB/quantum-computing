@@ -124,7 +124,6 @@ notation "|Ψ+⟩" => ket_Psi_plus
 notation "|Ψ-⟩" => ket_Psi_minus
 
 
-def I {n : ℕ} : QSquare n := 1
 def I₂ : QSquare 2 := 1
 
 def X : QSquare 2 :=
@@ -167,10 +166,6 @@ def tens {m₁ n₁ m₂ n₂ : ℕ} (A : QMatrix m₁ n₁) (B : QMatrix m₂ n
 
 infixl:70 " ⨂ " => tens
 
--- def partial_trace {n m : ℕ} (M : QSquare (n * m)) : QSquare n :=
---   fun i j =>
---     ∑ k, sorry
-
 @[reducible]
 def CNOT : QSquare 4 :=
   |0⟩⟨0| ⨂ I₂ + |1⟩⟨1| ⨂ X
@@ -178,10 +173,6 @@ def CNOT : QSquare 4 :=
 @[reducible]
 def CNOT' : QSquare 4 :=
   I₂ ⨂ |0⟩⟨0| + X ⨂ |1⟩⟨1|
-
-def CNOTₙ (n : ℕ) (control target : Fin n) : QSquare (2^n) :=
-  fun i j =>
-    sorry
 
 @[simp]
 def zero_proj : QMatrix 2 2 := |0⟩ * ⟨0|
@@ -194,18 +185,11 @@ def QMatrix.toReal (M : QMatrix 1 1) : ℝ :=
 instance : Coe (QMatrix 1 1) ℝ where
   coe M := M.toReal
 
--- instance {m n : ℕ} : HSMul (QMatrix m n) ℂ (QMatrix m n) where
---   hSMul M c := Matrix.smul.smul c M
--- instance {m n : ℕ} : HSMul (QMatrix m n) ℝ (QMatrix m n) where
---   hSMul M c := Matrix.smul.smul c M
-
 def QVector.congruent {n : ℕ} (a b : QVector n) :=
   ∃ (c : ℂ), Complex.normSq c = 1 ∧ c • a = b
 
 notation:80 a " ≡ " b => QVector.congruent a b
 notation:80 a " ≢ " b => ¬QVector.congruent a b
-
--- #eval (1 : ℂ) / (1 : ℂ)
 
 lemma not_forall₂ {α β : Type} {P : α → β → Prop} :
   (¬∀ (x : α) (y : β), P x y) ↔ ∃ (x : α), ∃ (y : β), ¬P x y

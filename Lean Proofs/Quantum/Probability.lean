@@ -146,17 +146,5 @@ lemma Pr_two_flips_eq_2 :
   ℙ[two_flips = 2] = 1/4
   := by
     unfold two_flips
-    dsimp only [instMonadRandom, Random, Random.bind,
-      Random.pure]
-    unfold probability_equals
-    unfold Random.bind
-    conv =>
-      arg 1
-      args
-      dsimp
-      unfold Random.bind
-      
-    sorry
-    -- unfold two_flips
-    -- simp
-    -- norm_num
+    simp
+    norm_num
