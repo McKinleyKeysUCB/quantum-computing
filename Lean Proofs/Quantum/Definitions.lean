@@ -4,10 +4,9 @@ import Mathlib.Data.Real.Basic
 import Mathlib.Data.Real.Sqrt
 import Mathlib.Data.Complex.Basic
 import Quantum.Probability
+import Quantum.Lemmas
 
 open ComplexConjugate BigOperators Nat
-
-notation "√" a => Complex.ofReal (Real.sqrt a)
 
 @[reducible]
 def QMatrix (m n : ℕ) := Matrix (Fin m) (Fin n) ℂ

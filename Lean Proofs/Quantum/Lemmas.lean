@@ -4,7 +4,10 @@ import Mathlib.Tactic.Lemma
 import Mathlib.Order.Basic
 import Mathlib.Init.Data.Nat.Notation
 import Mathlib.Data.Nat.Defs
-import Quantum.Definitions
+import Mathlib.Data.Real.Sqrt
+import Mathlib.Data.Complex.Basic
+
+notation "√" a => Complex.ofReal (Real.sqrt a)
 
 lemma Nat.pos_iff_one_le {n : ℕ} :
   0 < n ↔ 1 ≤ n
