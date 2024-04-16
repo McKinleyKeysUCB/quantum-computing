@@ -1,9 +1,7 @@
 
 import Quantum.Basic
 
-/-
- - The proofs in this file are so long that my Lean client times out when verifying them. We have to increase the max heartbeats so that Lean won't time out.
- -/
+-- The proofs in this file are so long that my Lean client times out when verifying them. We have to increase the max heartbeats so that Lean won't time out.
 set_option maxHeartbeats 500000
 
 

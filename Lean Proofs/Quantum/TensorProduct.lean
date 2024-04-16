@@ -12,6 +12,7 @@ lemma tens_add {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix 
     rw [Matrix.add_apply, tens, tens, tens]
     simp
     rw [mul_add]
+
 @[simp]
 lemma add_tens {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix m₁ n₁} {C : QMatrix m₂ n₂} :
   (A + B) ⨂ C = A ⨂ C + B ⨂ C
@@ -21,6 +22,7 @@ lemma add_tens {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix 
     rw [Matrix.add_apply, tens, tens, tens]
     simp
     rw [add_mul]
+
 @[simp]
 lemma tens_sub {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix m₁ n₁} {C : QMatrix m₂ n₂} :
   C ⨂ (A - B) = C ⨂ A - C ⨂ B
@@ -30,6 +32,7 @@ lemma tens_sub {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix 
     rw [Matrix.sub_apply, tens, tens, tens]
     simp
     rw [mul_sub]
+
 @[simp]
 lemma sub_tens {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix m₁ n₁} {C : QMatrix m₂ n₂} :
   (A - B) ⨂ C = A ⨂ C - B ⨂ C
@@ -48,6 +51,7 @@ lemma smul_tens {m₁ n₁ m₂ n₂ : ℕ} {s : ℂ} {A : QMatrix m₁ n₁} {B
     apply funext₂
     intro i j
     ring
+
 @[simp]
 lemma tens_smul {m₁ n₁ m₂ n₂ : ℕ} {s : ℂ} {A : QMatrix m₁ n₁} {B : QMatrix m₂ n₂} :
   A ⨂ (s • B) = s • (A ⨂ B)
@@ -56,61 +60,6 @@ lemma tens_smul {m₁ n₁ m₂ n₂ : ℕ} {s : ℂ} {A : QMatrix m₁ n₁} {B
     apply funext₂
     intro i j
     ring
-
-def div_mod_inv {a b : ℕ} (q : Fin a) (r : Fin b) : Fin (a * b) :=
-  ⟨b * q + r, by
-    rcases q with ⟨q, hq⟩
-    rcases r with ⟨r, hr⟩
-    dsimp only
-    have : q + 1 ≤ a := by
-      exact hq
-    calc
-      _ < b * q + b       := by simp [hr]
-      _ = b * (q + 1)     := by ring
-      _ ≤ b * a           := Nat.mul_le_mul_left b hq
-      _ = a * b           := mul_comm _ _
-  ⟩
-
-lemma divNat_div_mod_inv {a b : ℕ} {q : Fin a} {r : Fin b} :
-  (div_mod_inv q r).divNat = q
-  := by
-    by_cases hb : b = 0
-    · rw [hb] at r
-      exfalso
-      exact false_of_mem_Fin_zero r
-    · apply Nat.zero_lt_of_ne_zero at hb
-      rw [div_mod_inv, Fin.divNat]
-      apply Fin.ext
-      dsimp
-      rw [
-        Nat.div_eq_sub_mod_div,
-        Nat.mul_add_mod,
-        Nat.mod_eq_of_lt r.isLt,
-        add_tsub_cancel_right,
-        Nat.mul_div_cancel_left _ hb,
-      ]
-
-lemma modNat_div_mod_inv {a b : ℕ} {q : Fin a} {r : Fin b} :
-  (div_mod_inv q r).modNat = r
-  := by
-    rw [div_mod_inv, Fin.modNat]
-    apply Fin.ext
-    dsimp
-    rw [
-      Nat.add_mod,
-      Nat.mul_mod_right,
-      zero_add,
-      Nat.mod_mod,
-      Nat.mod_eq_of_lt r.isLt,
-    ]
-
-lemma eq_of_div_eq_div_and_mod_eq_mod {a b : ℕ} {x y : Fin (a * b)} (hdiv : x.divNat = y.divNat) (hmod : x.modNat = y.modNat) :
-  x = y
-  := by
-    simp [Fin.divNat] at hdiv
-    simp [Fin.modNat] at hmod
-    apply Fin.ext
-    rw [← Nat.div_add_mod ↑x b, ← Nat.div_add_mod ↑y b, hdiv, hmod]
 
 lemma Finset.sum_Fin_mul {α : Type} [AddCommMonoid α] {a b : ℕ} (f : Fin a → Fin b → α) :
   (∑ x : Fin (a * b), f (Fin.divNat x) (Fin.modNat x)) = (∑ x : Fin a, ∑ y : Fin b, f x y)
@@ -125,10 +74,10 @@ lemma Finset.sum_Fin_mul {α : Type} [AddCommMonoid α] {a b : ℕ} (f : Fin a �
       constructor
       · intro
         rw [mem_image]
-        use div_mod_inv x.1 x.2
+        use Fin.div_mod_inv x.1 x.2
         constructor
         · simp only [mem_univ]
-        rw [divNat_div_mod_inv, modNat_div_mod_inv]
+        rw [Fin.divNat_div_mod_inv, Fin.modNat_div_mod_inv]
       · intro hx
         rw [mem_image] at hx
         rcases hx with ⟨y, ⟨_, hxy⟩⟩
@@ -139,8 +88,9 @@ lemma Finset.sum_Fin_mul {α : Type} [AddCommMonoid α] {a b : ℕ} (f : Fin a �
     intro x _ y _ h
     simp [g] at h
     rcases h with ⟨left, right⟩
-    exact eq_of_div_eq_div_and_mod_eq_mod left right
+    exact Fin.eq_of_div_eq_div_and_mod_eq_mod left right
 
+-- TODO: Implement
 -- theorem tens_ext {M : QMatrix (m*p) (n*q)} (h : ∀ (r : Fin m) (s : Fin n) (v : Fin p) (w : Fin q), A r s * B v w = M (div_mod_inv r v) (div_mod_inv s w)) :
 --   A ⨂ B = M
 --   := by
@@ -169,39 +119,15 @@ lemma tens_mul_tens {a₁ b₁ c₁ a₂ b₂ c₂ : ℕ} {A : QMatrix a₁ b₁
  -/
 notation "cast_matrix" M => cast (by ring_nf) M
 
-lemma cast_apply_eq_apply {α α' β β' γ : Type} {f : α → β → γ} {a : α} {b : β} {a' : α'} {b' : β'} (ha : HEq a' a) (hb : HEq b' b) {h : (α → β → γ) = (α' → β' → γ)} :
-  cast h f a' b' = f a b
-  := by
-    cases ha
-    cases hb
-    rfl
-
 lemma QMatrix.cast_apply {m₁ n₁ m₂ n₂ : ℕ} {i : Fin m₂} {j : Fin n₂} {h : QMatrix m₁ n₁ = QMatrix m₂ n₂} {M : QMatrix m₁ n₁} (hm : m₁ = m₂) (hn : n₁ = n₂) :
   (cast h M) i j = M (Fin.cast hm.symm i) (Fin.cast hn.symm j)
   := by
-    rw [cast_apply_eq_apply]
-    · exact (Fin.heq_ext_iff (id hm.symm)).mpr rfl
-    · exact (Fin.heq_ext_iff (id hn.symm)).mpr rfl
-
-lemma Fin.div_div_eq_div_cast {a b c : ℕ} {i : Fin (a * b * c)} {h : (a * b * c) = (a * (b * c))} :
-  Fin.divNat (Fin.divNat i) = Fin.divNat (Fin.cast h i)
-  := by
-    unfold divNat
-    simp
-    rw [Nat.div_div_eq_div_mul, mul_comm c b]
-
-lemma Fin.mod_div_eq_div_mod_cast {a b c : ℕ} {i : Fin (a * b * c)} {h : (a * b * c) = (a * (b * c))} :
-  Fin.modNat (Fin.divNat i) = Fin.divNat (Fin.modNat (Fin.cast h i))
-  := by
-    unfold divNat modNat
-    simp
-    rw [Nat.mod_mul_left_div_self]
-
-lemma Fin.mod_eq_mod_mod_cast {a b c : ℕ} {i : Fin (a * b * c)} {h : (a * b * c) = (a * (b * c))} :
-  Fin.modNat i = Fin.modNat (Fin.modNat (Fin.cast h i))
-  := by
-    unfold modNat
-    simp
+    rw [cast_apply_eq_apply] <;> {
+      rw [Fin.heq_ext_iff]
+      rfl
+      symm
+      assumption
+    }
 
 @[simp]
 lemma tens_assoc {a b c d e f : ℕ} {A : QMatrix a b} {B : QMatrix c d} {C : QMatrix e f} :
@@ -223,6 +149,7 @@ lemma tens_zero {m₁ n₁ m₂ n₂ : ℕ} {M : QMatrix m₁ n₁} :
   := by
     simp
     rfl
+
 @[simp]
 lemma zero_tens {m₁ n₁ m₂ n₂ : ℕ} {M : QMatrix m₂ n₂} :
   (0 : QMatrix m₁ n₁) ⨂ M = 0

@@ -10,11 +10,21 @@ import Mathlib.Data.Matrix.Basic
 
 notation "√" a => Complex.ofReal (Real.sqrt a)
 
+
+/-
+ - Nat
+ -/
+
 lemma Nat.pos_iff_one_le {n : ℕ} :
   0 < n ↔ 1 ≤ n
   := calc
     0 < n ↔ n ≠ 0       := Nat.pos_iff_ne_zero
     _     ↔ 1 ≤ n       := by symm; apply one_le_iff_ne_zero
+
+
+/-
+ - Fin
+ -/
 
 lemma Fin.eq_zero_of_Fin_1 {i : Fin 1} :
   i = 0
@@ -66,12 +76,7 @@ lemma Fin.bash4 {P : Fin 4 → Fin 1 → Prop} (hP0 : P 0 0) (hP1 : P 1 0) (hP2 
     rw [hi3]
     exact hP3
 
-lemma if_true_false {p : Bool} :
-  (if p then true else false) = p
-  := by
-    by_cases h : p <;> simp [h]
-
-lemma false_of_mem_Fin_zero (a : Fin 0) :
+lemma Fin.false_of_mem_Fin_zero (a : Fin 0) :
   False
   := by
     have : a.val < 0 := a.isLt
@@ -80,17 +85,102 @@ lemma false_of_mem_Fin_zero (a : Fin 0) :
     apply Nat.eq_zero_of_le_zero at h₁
     exact h₂ h₁
 
-lemma one_div_sqrt_two_sq :
-  (1/√2) * (1/√2) = 1/2
+def Fin.div_mod_inv {a b : ℕ} (q : Fin a) (r : Fin b) : Fin (a * b) :=
+  ⟨b * q + r, by
+    rcases q with ⟨q, hq⟩
+    rcases r with ⟨r, hr⟩
+    dsimp only
+    have : q + 1 ≤ a := by
+      exact hq
+    calc
+      _ < b * q + b       := by simp [hr]
+      _ = b * (q + 1)     := by ring
+      _ ≤ b * a           := Nat.mul_le_mul_left b hq
+      _ = a * b           := mul_comm _ _
+  ⟩
+
+lemma Fin.divNat_div_mod_inv {a b : ℕ} {q : Fin a} {r : Fin b} :
+  (div_mod_inv q r).divNat = q
   := by
+    by_cases hb : b = 0
+    · rw [hb] at r
+      exfalso
+      exact Fin.false_of_mem_Fin_zero r
+    · apply Nat.zero_lt_of_ne_zero at hb
+      rw [div_mod_inv, Fin.divNat]
+      apply Fin.ext
+      dsimp
+      rw [
+        Nat.div_eq_sub_mod_div,
+        Nat.mul_add_mod,
+        Nat.mod_eq_of_lt r.isLt,
+        add_tsub_cancel_right,
+        Nat.mul_div_cancel_left _ hb,
+      ]
+
+lemma Fin.modNat_div_mod_inv {a b : ℕ} {q : Fin a} {r : Fin b} :
+  (div_mod_inv q r).modNat = r
+  := by
+    rw [div_mod_inv, Fin.modNat]
+    apply Fin.ext
+    dsimp
     rw [
-      div_mul_div_comm,
-      one_mul,
-      ← sq _,
-      Complex.ofReal_eq_coe,
-      ← Complex.ofReal_pow,
+      Nat.add_mod,
+      Nat.mul_mod_right,
+      zero_add,
+      Nat.mod_mod,
+      Nat.mod_eq_of_lt r.isLt,
     ]
-    simp only [Nat.ofNat_nonneg, Real.sq_sqrt, Complex.ofReal_ofNat, one_div]
+
+lemma Fin.eq_of_div_eq_div_and_mod_eq_mod {a b : ℕ} {x y : Fin (a * b)} (hdiv : x.divNat = y.divNat) (hmod : x.modNat = y.modNat) :
+  x = y
+  := by
+    simp [Fin.divNat] at hdiv
+    simp [Fin.modNat] at hmod
+    apply Fin.ext
+    rw [← Nat.div_add_mod ↑x b, ← Nat.div_add_mod ↑y b, hdiv, hmod]
+
+lemma Fin.div_div_eq_div_cast {a b c : ℕ} {i : Fin (a * b * c)} {h : (a * b * c) = (a * (b * c))} :
+  Fin.divNat (Fin.divNat i) = Fin.divNat (Fin.cast h i)
+  := by
+    unfold divNat
+    simp
+    rw [Nat.div_div_eq_div_mul, mul_comm c b]
+
+lemma Fin.mod_div_eq_div_mod_cast {a b c : ℕ} {i : Fin (a * b * c)} {h : (a * b * c) = (a * (b * c))} :
+  Fin.modNat (Fin.divNat i) = Fin.divNat (Fin.modNat (Fin.cast h i))
+  := by
+    unfold divNat modNat
+    simp
+    rw [Nat.mod_mul_left_div_self]
+
+lemma Fin.mod_eq_mod_mod_cast {a b c : ℕ} {i : Fin (a * b * c)} {h : (a * b * c) = (a * (b * c))} :
+  Fin.modNat i = Fin.modNat (Fin.modNat (Fin.cast h i))
+  := by
+    unfold modNat
+    simp
+
+
+/-
+ - Casting
+ -/
+
+lemma cast_apply_eq_apply {α α' β β' γ : Type} {f : α → β → γ} {a : α} {b : β} {a' : α'} {b' : β'} (ha : HEq a' a) (hb : HEq b' b) {h : (α → β → γ) = (α' → β' → γ)} :
+  cast h f a' b' = f a b
+  := by
+    cases ha
+    cases hb
+    rfl
+
+
+/-
+ - Logic
+ -/
+
+lemma if_true_false {p : Bool} :
+  (if p then true else false) = p
+  := by
+    by_cases h : p <;> simp [h]
 
 lemma if_then_self_else_not_self {P : Prop} [Decidable P] :
   if P then P else ¬P
@@ -114,7 +204,48 @@ lemma not_forall₂ {α β : Type} {P : α → β → Prop} :
       rw [not_forall]
       use y
 
+
+/-
+ - Matrix
+ -/
+
 lemma Matrix.ne_zero_of_element_ne_zero {m n α : Type} [Zero α] {M : Matrix m n α} (i : m) (j : n) (hij : M i j ≠ 0) :
   M ≠ 0
   := by
     exact fun a => hij (congrFun (congrFun a i) j)
+
+
+/-
+ - Square Roots
+ -/
+
+lemma one_div_sqrt_two_sq :
+  (1/√2) * (1/√2) = 1/2
+  := by
+    rw [
+      div_mul_div_comm,
+      one_mul,
+      ← sq _,
+      Complex.ofReal_eq_coe,
+      ← Complex.ofReal_pow,
+    ]
+    simp only [Nat.ofNat_nonneg, Real.sq_sqrt, Complex.ofReal_ofNat, one_div]
+
+lemma one_div_sqrt_half_mul_half :
+  ↑(1 / Real.sqrt (1 / 2)) * (1 / 2) = 1 / Complex.ofReal (Real.sqrt 2)
+  := by
+    rw [Complex.ofReal_eq_coe, Complex.div_ofReal, Complex.ofReal_mul']
+    simp
+    rw [← division_def, Real.sqrt_div_self]
+
+lemma one_div_sqrt_half_mul_one_div_sqrt_two :
+  ↑(1 / Real.sqrt (1 / 2)) * (1 / Complex.ofReal (Real.sqrt 2)) = 1
+  := by
+    simp only [one_div, Real.sqrt_inv, div_inv_eq_mul, one_mul, Complex.ofReal_eq_coe, ne_eq,
+      Complex.ofReal_eq_zero, Nat.ofNat_nonneg, Real.sqrt_eq_zero, OfNat.ofNat_ne_zero,
+      not_false_eq_true, mul_inv_cancel]
+
+lemma sqrt_two_div_two_sq :
+  Real.sqrt 2 / 2 * (Real.sqrt 2 / 2) = 1 / 2
+  := by
+    simp only [Real.sqrt_div_self', one_div, ← mul_inv, Nat.ofNat_nonneg, Real.mul_self_sqrt]
