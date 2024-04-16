@@ -412,15 +412,24 @@ lemma ncong_zero_of_ne_zero {n : ℕ} {φ : QVector n} (h : φ ≠ 0) :
     · rw [← Fin.eq_zero j]
       exact h
 
-lemma ncong_smul_of_ncong {n : ℕ} {a b : QVector n} {c : ℂ} (h : a ≢ b) :
+lemma ncong_smul_of_ncong {n : ℕ} {a b : QVector n} {c : ℂ} (hc : Complex.normSq c = 1) (h : a ≢ b) :
   a ≢ c • b
   := by
     apply by_contradiction
     intro h'
     rw [not_not] at h'
     rcases h' with ⟨c', ⟨hc', h'⟩⟩
-    
-    sorry
+    apply h
+    use c' / c
+    constructor
+    · simp [hc', hc]
+    · rw [division_def, mul_comm, mul_smul, h', ← mul_smul]
+      have hc : c ≠ 0 := by
+        contrapose hc
+        rw [not_not] at hc
+        rw [hc]
+        simp only [map_zero, zero_ne_one, not_false_eq_true]
+      rw [(inv_mul_eq_one₀ hc).mpr rfl, one_smul]
 lemma ket0_ncong_ket1 :
   |0⟩ ≢ |1⟩
   := by
