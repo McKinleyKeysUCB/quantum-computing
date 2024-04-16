@@ -206,8 +206,91 @@ def QVector.congruent {n : ℕ} (a b : QVector n) :=
 notation:80 a " ≡ " b => QVector.congruent a b
 notation:80 a " ≢ " b => ¬QVector.congruent a b
 
+-- #eval (1 : ℂ) / (1 : ℂ)
+
+lemma not_forall₂ {α β : Type} {P : α → β → Prop} :
+  (¬∀ (x : α) (y : β), P x y) ↔ ∃ (x : α), ∃ (y : β), ¬P x y
+  := by
+    rw [not_forall]
+    constructor
+    · intro h
+      rcases h with ⟨x, h⟩
+      rw [not_forall] at h
+      rcases h with ⟨y, h⟩
+      use x
+      use y
+    · intro h
+      rcases h with ⟨x, ⟨y, h⟩⟩
+      use x
+      rw [not_forall]
+      use y
+
+noncomputable
 instance {a b : QVector n} : Decidable (a ≡ b) := by
-  sorry
+  let P (i : Fin n) := a i 0 ≠ 0
+  cases hP : Fin.find P with
+  | none =>
+    rw [Fin.find_eq_none_iff] at hP
+    have ha : a = 0 := by
+      apply Matrix.ext
+      intro i j
+      rw [Matrix.zero_apply, Fin.eq_zero j]
+      specialize hP i
+      simp only [Fin.isValue, ne_eq, not_not, P] at hP
+      exact hP
+    by_cases hb : b = 0
+    · apply Decidable.isTrue
+      use 1
+      simp [ha, hb]
+    · apply Decidable.isFalse
+      unfold QVector.congruent
+      rw [not_exists]
+      intro c
+      rw [not_and]
+      intro
+      rw [ha]
+      simp [*, Eq.comm]
+  | some i =>
+    have hi : a i 0 ≠ 0 := by
+      change P i
+      apply Fin.find_spec
+      rw [Option.mem_def, hP]
+    let c := b i 0 / a i 0
+    have {c' : ℂ} (hcc' : c ≠ c') : c' • a ≠ b := by
+      rw [Ne, ← Matrix.ext_iff, not_forall₂]
+      use i
+      use 0
+      rw [Matrix.smul_apply]
+      unfold_let c at hcc'
+      simp only [Fin.isValue, smul_eq_mul]
+      rw [← propext (eq_div_iff hi), Eq.comm]
+      exact hcc'
+    by_cases hc : Complex.normSq c = 1
+    · by_cases h : c • a = b
+      · apply Decidable.isTrue
+        use c
+      · apply Decidable.isFalse
+        unfold QVector.congruent
+        rw [not_exists]
+        intro c'
+        rw [not_and]
+        intro
+        by_cases hcc' : c = c'
+        · rw [← hcc']
+          exact h
+        · exact this hcc'
+    · apply Decidable.isFalse
+      unfold QVector.congruent
+      rw [not_exists]
+      intro c'
+      rw [not_and]
+      intro hc'
+      apply this
+      rw [Ne]
+      have hnorm : ¬Complex.normSq c = Complex.normSq c' := by
+        rw [hc']
+        exact hc
+      exact fun a ↦ hnorm (congrArg (⇑Complex.normSq) a)
 
 @[simp]
 noncomputable
