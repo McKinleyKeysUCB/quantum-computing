@@ -70,11 +70,13 @@ structure TeleportRNGResult (φ : Qubit) where
   rng : RNG
 
 noncomputable
-def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
-  TeleportRNGResult φ :=
+def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : TeleportRNGResult φ :=
+  
   let α := φ.α
   let β := φ.β
+  
   let state₀ := φ ⨂ |00⟩
+  
   let state₁ := CNOT₂₁ * (I₂ ⨂ I₂ ⨂ H) * state₀
   have : state₁ = φ ⨂ |Φ+⟩ := by
     unfold_let state₁ state₀
@@ -91,6 +93,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
       ← I₂,
       entangle_ket00',
     ]
+  
   let state₂ := (H ⨂ I₂ ⨂ I₂) * CNOT₀₁ * state₁
   have : state₂ = (1/2 : ℂ) • (
     |00⟩ ⨂ (α•|0⟩ + β•|1⟩) +
@@ -167,21 +170,13 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
         tens_mul_tens,
         H_mul_ket1,
       ]
-    rw [
-      I₂,
-      Matrix.one_mul,
-      Matrix.one_mul,
-      Matrix.one_mul,
-      Matrix.one_mul,
-      Matrix.one_mul,
-      ket_plus_eq_ket0_plus_ket1,
-      ket_minus_eq_ket0_minus_ket1,
-    ]
+    rw [I₂]
+    repeat rw [Matrix.one_mul]
+    rw [ket_plus_eq_ket0_plus_ket1, ket_minus_eq_ket0_minus_ket1]
     conv =>
       lhs
       rw [smul_add]
-      args
-      {
+      args <;> {
         arg 2
         rw [
           smul_tens,
@@ -191,20 +186,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
           ← smul_add,
         ]
       }
-      {
-        arg 2
-        rw [
-          smul_tens,
-          smul_comm (m := α),
-          smul_tens,
-          smul_comm (m := β),
-          ← smul_add,
-        ]
-      }
-    rw [
-      ← smul_tens,
-      smul_smul,
-    ]
+    rw [← smul_tens, smul_smul]
     nth_rw 3 [← smul_tens]
     rw [
       smul_smul,
@@ -212,26 +194,13 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
       smul_tens,
       ← smul_add,
       one_div_sqrt_two_sq,
-      add_tens,
-      smul_tens,
-      ← tens_smul,
-      smul_tens,
-      ← tens_smul,
+      add_tens
     ]
+    repeat rw [smul_tens, ← tens_smul]
     nth_rw 2 [add_tens]
+    repeat rw [smul_tens, ← tens_smul]
+    repeat rw [add_tens, sub_tens]
     rw [
-      smul_tens,
-      ← tens_smul,
-      smul_tens,
-      ← tens_smul,
-      add_tens,
-      add_tens,
-      sub_tens,
-      sub_tens,
-      add_tens,
-      add_tens,
-      sub_tens,
-      sub_tens,
       ket0_tens_ket0,
       ket0_tens_ket1,
       ket1_tens_ket0,
@@ -274,20 +243,10 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
         add_sub_assoc,
         add_sub_assoc,
         add_left_comm,
-        add_sub_assoc,
-        add_sub_assoc,
-        add_sub_assoc,
-        add_sub_assoc,
       ]
+      repeat rw [add_sub_assoc]
     congr 2
-    conv =>
-      rhs
-      rw [
-        ← add_sub_right_comm,
-        ← add_sub_right_comm,
-        add_sub_assoc,
-        add_sub_assoc,
-      ]
+    simp only [← add_sub_right_comm, add_sub_assoc]
   
   
   /-
