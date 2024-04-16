@@ -13,6 +13,77 @@ lemma one_div_sqrt_two_sq :
   := by
     sorry
 
+lemma decompose_qubit_into_Z_basis (φ : Qubit) :
+  φ = φ.α • |0⟩ + φ.β • |1⟩
+  := by
+    apply Matrix.ext
+    intro i j
+    rw [Matrix.add_apply]
+    rw [Matrix.smul_apply, Matrix.smul_apply]
+    have hj : j = 0 := by
+      apply Fin.eq_zero
+    rw [hj, ket0, ket1]
+    by_cases hi : i = 0
+    · rw [hi]
+      simp
+    · apply Fin.eq_one_of_neq_zero i at hi
+      rw [hi]
+      simp
+
+
+/-
+ - Adjoints
+ -/
+
+@[simp]
+lemma double_adjoint {m n : ℕ} {M : QMatrix m n} :
+  M†† = M
+  := by
+    apply Matrix.ext
+    intro i j
+    simp
+
+@[simp]
+lemma adjoint_mul {a b c : ℕ} {A : QMatrix a b} {B : QMatrix b c} :
+  (A * B)† = B† * A†
+  := by
+    apply Matrix.ext
+    intro i j
+    rw [Matrix.mul_apply']
+    unfold QMatrix.adjoint
+    rw [Matrix.mul_apply', ← Matrix.star_dotProduct_star]
+    rfl
+
+@[simp]
+lemma adjoint_smul {m n : ℕ} {c : ℂ} {M : QMatrix m n} :
+  (c • M)† = star c • M†
+  := by
+    apply Matrix.ext
+    simp only [QMatrix.adjoint, Matrix.smul_apply, smul_eq_mul, star_mul', Complex.star_def,
+      implies_true]
+
+@[simp]
+lemma adjoint_add {m n : ℕ} {A B : QMatrix m n} :
+  (A + B)† = A† + B†
+  := by
+    apply Matrix.ext
+    simp only [QMatrix.adjoint, Matrix.add_apply, star_add, Complex.star_def, implies_true]
+
+@[simp]
+lemma adjoint_sub {m n : ℕ} {A B : QMatrix m n} :
+  (A - B)† = A† - B†
+  := by
+    apply Matrix.ext
+    simp only [QMatrix.adjoint, Matrix.sub_apply, star_sub, Complex.star_def, implies_true]
+
+@[simp]
+lemma adjoint_tens {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix m₂ n₂} :
+  (A ⨂ B)† = A† ⨂ B†
+  := by
+    apply Matrix.ext
+    simp only [QMatrix.adjoint, tens, Matrix.of_apply, star_mul', Complex.star_def, implies_true]
+
+
 lemma norm_ket0_eq_1 :
   | |0⟩ | = 1
   := by
@@ -29,26 +100,21 @@ lemma norm_ket_plus_eq_1 :
     simp [norm, ket_plus, Qubit.α, Qubit.β]
     rw [inv_eq_one_div, add_halves]
 
-lemma qubit_unitary {φ : Qubit} :
-  φ.unitary ↔ Complex.normSq φ.α + Complex.normSq φ.β = 1
-  := by
-    sorry
-
-lemma qubit_unitary' {φ : Qubit} :
-  φ.unitary ↔ star φ.α * φ.α + star φ.β * φ.β = 1
-  := by
-    sorry
-
 lemma ket0_unitary :
   |0⟩.unitary
   := by
-    rw [qubit_unitary, Qubit.α, Qubit.β, ket0]
-    simp
+    unfold QMatrix.unitary ket0 QMatrix.adjoint
+    apply Matrix.ext
+    intro i j
+    simp [Fin.eq_zero i, Fin.eq_zero j, Matrix.mul_apply]
 lemma ket1_unitary :
   |1⟩.unitary
   := by
-    rw [qubit_unitary, Qubit.α, Qubit.β, ket1]
-    simp
+    unfold QMatrix.unitary ket1 QMatrix.adjoint
+    apply Matrix.ext
+    intro i j
+    simp [Fin.eq_zero i, Fin.eq_zero j, Matrix.mul_apply]
+
 lemma bra0_mul_ket0 :
   ⟨0| * |0⟩ = 1
   := ket0_unitary
@@ -69,6 +135,27 @@ lemma bra0_mul_ket1 :
     apply Matrix.ext
     intro i j
     simp [Matrix.mul_apply]
+
+lemma qubit_unitary {φ : Qubit} :
+  φ.unitary ↔ Complex.normSq φ.α + Complex.normSq φ.β = 1
+  := by
+    unfold QMatrix.unitary
+    rw [decompose_qubit_into_Z_basis φ]
+    simp only [adjoint_add, Matrix.add_mul, Matrix.mul_add, adjoint_smul, Matrix.mul_smul, Matrix.smul_mul, smul_add, smul_smul]
+    rw [ket0_unitary, ket1_unitary, bra0_mul_ket1, bra1_mul_ket0]
+    simp only [Complex.star_def, smul_zero, add_zero, zero_add, Matrix.smul_of, Fin.isValue,
+      Matrix.of_add_of, Matrix.of_apply, Pi.add_apply, Pi.smul_apply, ↓reduceIte, zero_ne_one,
+      smul_eq_mul, mul_one, mul_zero, one_ne_zero]
+    rw [← add_smul, ← Matrix.ext_iff]
+    simp [Matrix.smul_apply, Matrix.one_apply, Fin.eq_zero, Complex.mul_conj]
+    rw [← Complex.ofReal_add, Complex.ofReal_eq_one]
+
+lemma qubit_unitary' {φ : Qubit} :
+  φ.unitary ↔ star φ.α * φ.α + star φ.β * φ.β = 1
+  := by
+    rw [qubit_unitary, Complex.star_def]
+    simp only [← Complex.normSq_eq_conj_mul_self]
+    rw [← Complex.ofReal_add, Complex.ofReal_eq_one]
 
 lemma proj_mul_self {φ : Qubit} (h : φ.unitary) :
   φ * φ† * φ = φ
@@ -519,24 +606,6 @@ lemma CNOT_mul_ket1_tens {φ : Qubit} :
     simp
 
 
-lemma decompose_qubit_into_Z_basis (φ : Qubit) :
-  φ = φ.α • |0⟩ + φ.β • |1⟩
-  := by
-    apply Matrix.ext
-    intro i j
-    rw [Matrix.add_apply]
-    rw [Matrix.smul_apply, Matrix.smul_apply]
-    have hj : j = 0 := by
-      apply Fin.eq_zero
-    rw [hj, ket0, ket1]
-    by_cases hi : i = 0
-    · rw [hi]
-      simp
-    · apply Fin.eq_one_of_neq_zero i at hi
-      rw [hi]
-      simp
-
-
 /-
  - X Gate
  -/
@@ -651,58 +720,6 @@ lemma H_mul_ket1 :
     rw [Matrix.mul_apply]
     simp
 
-
-/-
- - Adjoints
- -/
-
-@[simp]
-lemma double_adjoint {m n : ℕ} {M : QMatrix m n} :
-  M†† = M
-  := by
-    apply Matrix.ext
-    intro i j
-    simp
-
-@[simp]
-lemma adjoint_mul {a b c : ℕ} {A : QMatrix a b} {B : QMatrix b c} :
-  (A * B)† = B† * A†
-  := by
-    apply Matrix.ext
-    intro i j
-    rw [Matrix.mul_apply']
-    unfold QMatrix.adjoint
-    rw [Matrix.mul_apply', ← Matrix.star_dotProduct_star]
-    rfl
-
-@[simp]
-lemma adjoint_smul {m n : ℕ} {c : ℂ} {M : QMatrix m n} :
-  (c • M)† = star c • M†
-  := by
-    apply Matrix.ext
-    simp only [QMatrix.adjoint, Matrix.smul_apply, smul_eq_mul, star_mul', Complex.star_def,
-      implies_true]
-
-@[simp]
-lemma adjoint_add {m n : ℕ} {A B : QMatrix m n} :
-  (A + B)† = A† + B†
-  := by
-    apply Matrix.ext
-    simp only [QMatrix.adjoint, Matrix.add_apply, star_add, Complex.star_def, implies_true]
-
-@[simp]
-lemma adjoint_sub {m n : ℕ} {A B : QMatrix m n} :
-  (A - B)† = A† - B†
-  := by
-    apply Matrix.ext
-    simp only [QMatrix.adjoint, Matrix.sub_apply, star_sub, Complex.star_def, implies_true]
-
-@[simp]
-lemma adjoint_tens {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix m₂ n₂} :
-  (A ⨂ B)† = A† ⨂ B†
-  := by
-    apply Matrix.ext
-    simp only [QMatrix.adjoint, tens, Matrix.of_apply, star_mul', Complex.star_def, implies_true]
 
 @[simp]
 lemma proj_hermitian {m n : ℕ} {M : QMatrix m n} :
