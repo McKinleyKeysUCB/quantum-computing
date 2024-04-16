@@ -393,24 +393,23 @@ lemma cong_smul_self {n : ℕ} {φ : QVector n} {c : ℂ} (hc : Complex.normSq c
 lemma Qmeasure0 {φ : Qubit} :
   ℙ[Zmeasure φ ≡ |0⟩] = ‖φ.α‖
   := by
-    conv =>
-      lhs
-      args
-      unfold Zmeasure Qmeasure_single_qubit
-      simp [zero_proj_phi', one_proj_phi']
-      rw [zero_proj_phi, one_proj_phi]
-    simp
+    unfold Zmeasure Qmeasure_single_qubit
+    simp only [probability_congruent, instMonadRandom, Random, zero_proj_phi', one_div,
+      Complex.ofReal_inv, one_proj_phi', Random.bind, Random.pure, is_congruent, mul_ite, mul_one,
+      mul_zero]
+    rw [zero_proj_phi, one_proj_phi]
+    simp only [probability_congruent, Random.bind, Random.pure, is_congruent, Matrix.smul_of, Fin.isValue, mul_ite, mul_one, mul_zero]
     nth_rw 2 [if_neg]
     rw [add_zero]
     by_cases hα : φ.α = 0
     · rw [if_neg]
-      · simp [hα]
+      · simp only [hα, map_zero]
       rw [hα, Complex.normSq_zero, Real.sqrt_zero]
-      simp
+      simp only [Complex.ofReal_zero, inv_zero, Fin.isValue, zero_smul, smul_zero, Matrix.of_zero]
       apply ncong_zero_of_ne_zero
       apply QMatrix.ne_zero_of_element_ne_zero 0 0
       rw [ket0]
-      simp
+      simp only [Fin.isValue, Matrix.of_apply, ↓reduceIte, ne_eq, one_ne_zero, not_false_eq_true]
     · rw [if_pos]
       rw [smul_smul]
       apply cong_smul_self
