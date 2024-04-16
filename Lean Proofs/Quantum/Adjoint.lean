@@ -7,7 +7,7 @@ lemma double_adjoint {m n : ℕ} {M : QMatrix m n} :
   := by
     apply Matrix.ext
     intro i j
-    simp
+    simp only [QMatrix.adjoint, Complex.star_def, RingHomCompTriple.comp_apply, RingHom.id_apply]
 
 @[simp]
 lemma adjoint_mul {a b c : ℕ} {A : QMatrix a b} {B : QMatrix b c} :

@@ -25,25 +25,25 @@ lemma decompose_qubit_into_Z_basis (φ : Qubit) :
     rw [hj, ket0, ket1]
     by_cases hi : i = 0
     · rw [hi]
-      simp
+      simp only [Fin.isValue, Matrix.of_apply, ↓reduceIte, smul_eq_mul, mul_one, zero_ne_one, mul_zero, add_zero]
     · apply Fin.eq_one_of_neq_zero i at hi
       rw [hi]
-      simp
+      simp only [Fin.isValue, Matrix.of_apply, one_ne_zero, ↓reduceIte, smul_eq_mul, mul_zero, mul_one, zero_add]
 
 lemma norm_ket0_eq_1 :
   | |0⟩ | = 1
   := by
-    simp [norm, ket0, Qubit.α, Qubit.β]
+    simp only [norm, Qubit.α, ket0, Fin.isValue, Matrix.of_apply, ↓reduceIte, map_one, Qubit.β, one_ne_zero, map_zero, add_zero, Real.sqrt_one]
 
 lemma norm_ket1_eq_1 :
   | |1⟩ | = 1
   := by
-    simp [norm, ket1, Qubit.α, Qubit.β]
+    simp only [norm, Qubit.α, ket1, Fin.isValue, Matrix.of_apply, zero_ne_one, ↓reduceIte, map_zero, Qubit.β, map_one, zero_add, Real.sqrt_one]
 
 lemma norm_ket_plus_eq_1 :
   | |+⟩ | = 1
   := by
-    simp [norm, ket_plus, Qubit.α, Qubit.β]
+    simp only [norm, Qubit.α, ket_plus, Complex.ofReal_eq_coe, one_div, Fin.isValue, Matrix.smul_apply, Matrix.of_apply, smul_eq_mul, mul_one, map_inv₀, Complex.normSq_ofReal, Nat.ofNat_nonneg, Real.mul_self_sqrt, Qubit.β, Real.sqrt_eq_one]
     rw [inv_eq_one_div, add_halves]
 
 lemma ket_plus_eq_ket0_plus_ket1 :
@@ -51,14 +51,45 @@ lemma ket_plus_eq_ket0_plus_ket1 :
   := by
     unfold ket_plus ket0 ket1
     apply Matrix.ext
-    apply Fin.bash2 <;> simp
+    apply Fin.bash2 <;> simp only [
+      Complex.ofReal_eq_coe,
+      one_div,
+      Fin.isValue,
+      Matrix.smul_apply,
+      Matrix.of_apply,
+      smul_eq_mul,
+      mul_one,
+      Matrix.of_add_of,
+      Pi.add_apply,
+      ↓reduceIte,
+      zero_ne_one,
+      one_ne_zero,
+      add_zero,
+      zero_add,
+    ]
 
 lemma ket_minus_eq_ket0_minus_ket1 :
   |-⟩ = (1/√2) • (|0⟩ - |1⟩)
   := by
     unfold ket_minus ket0 ket1
     apply Matrix.ext
-    apply Fin.bash2 <;> simp
+    apply Fin.bash2 <;> simp only [
+      Complex.ofReal_eq_coe,
+      one_div,
+      Fin.isValue,
+      Matrix.smul_apply,
+      Matrix.of_apply,
+      ↓reduceIte,
+      one_ne_zero,
+      zero_ne_one,
+      smul_eq_mul,
+      mul_neg,
+      mul_one,
+      Matrix.of_sub_of,
+      Pi.sub_apply,
+      sub_zero,
+      zero_sub,
+    ]
 
 lemma ket0_unitary :
   |0⟩.unitary
@@ -66,7 +97,7 @@ lemma ket0_unitary :
     unfold QMatrix.unitary ket0 QMatrix.adjoint
     apply Matrix.ext
     intro i j
-    simp [Fin.eq_zero i, Fin.eq_zero j, Matrix.mul_apply]
+    simp only [Fin.isValue, Matrix.of_apply, Complex.star_def, RingHom.map_ite_one_zero, Fin.eq_zero i, Fin.eq_zero j, Matrix.mul_apply, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, ↓reduceIte, Matrix.one_apply_eq]
 
 lemma ket1_unitary :
   |1⟩.unitary
@@ -74,7 +105,7 @@ lemma ket1_unitary :
     unfold QMatrix.unitary ket1 QMatrix.adjoint
     apply Matrix.ext
     intro i j
-    simp [Fin.eq_zero i, Fin.eq_zero j, Matrix.mul_apply]
+    simp only [Fin.isValue, Matrix.of_apply, Complex.star_def, RingHom.map_ite_one_zero, Fin.eq_zero i, Fin.eq_zero j, Matrix.mul_apply, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, ↓reduceIte, Matrix.one_apply_eq]
 
 lemma bra0_mul_ket0 :
   ⟨0| * |0⟩ = 1
@@ -90,7 +121,7 @@ lemma bra1_mul_ket0 :
     unfold bra1 ket0 ket1 QMatrix.adjoint
     apply Matrix.ext
     intro i j
-    simp [Matrix.mul_apply]
+    simp only [Fin.isValue, Matrix.of_apply, Complex.star_def, RingHom.map_ite_one_zero, Matrix.mul_apply, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, ↓reduceIte, zero_ne_one, Matrix.zero_apply]
 
 lemma bra0_mul_ket1 :
   ⟨0| * |1⟩ = 0
@@ -98,7 +129,7 @@ lemma bra0_mul_ket1 :
     unfold bra0 ket0 ket1 QMatrix.adjoint
     apply Matrix.ext
     intro i j
-    simp [Matrix.mul_apply]
+    simp only [Fin.isValue, Matrix.of_apply, Complex.star_def, RingHom.map_ite_one_zero, Matrix.mul_apply, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, ↓reduceIte, one_ne_zero, Matrix.zero_apply]
 
 lemma qubit_unitary {φ : Qubit} :
   φ.unitary ↔ Complex.normSq φ.α + Complex.normSq φ.β = 1
@@ -111,7 +142,7 @@ lemma qubit_unitary {φ : Qubit} :
       Matrix.of_add_of, Matrix.of_apply, Pi.add_apply, Pi.smul_apply, ↓reduceIte, zero_ne_one,
       smul_eq_mul, mul_one, mul_zero, one_ne_zero]
     rw [← add_smul, ← Matrix.ext_iff]
-    simp [Matrix.smul_apply, Matrix.one_apply, Fin.eq_zero, Complex.mul_conj]
+    simp only [Complex.mul_conj, Fin.eq_zero, Fin.isValue, Matrix.smul_apply, Matrix.one_apply_eq, smul_eq_mul, mul_one, forall_const]
     rw [← Complex.ofReal_add, Complex.ofReal_eq_one]
 
 lemma qubit_unitary' {φ : Qubit} :
@@ -227,37 +258,12 @@ lemma qubit_tens_qubit (a b : Qubit) :
     else
       (a 1 0) * (b 1 0)
   := by
-    dsimp only [tens]
-    simp
+    simp only [tens, Fin.isValue]
     apply funext₂
-    intro i j
-    have hj : j = 0 := by
-      apply Fin.eq_zero
-    by_cases i0 : i = 0
-    · simp [i0, hj]
+    apply Fin.bash4 <;> {
+      simp only [Fin.isValue, Matrix.of_apply, Fin.reduceEq, one_ne_zero, ↓reduceIte]
       congr
-    by_cases i1 : i = 1
-    · simp [i1, hj]
-      congr
-    by_cases i2 : i = 2
-    · simp [i2, hj]
-      congr
-    have i3 : i = 3 := by
-      have : i.val < 4 := i.isLt
-      apply Fin.ext
-      apply Fin.val_ne_iff.mpr at i0
-      apply Fin.val_ne_iff.mpr at i1
-      apply Fin.val_ne_iff.mpr at i2
-      apply Nat.pos_iff_ne_zero.mpr at i0
-      apply Nat.pos_iff_one_le.mp at i0
-      apply (Nat.lt_of_le_of_ne · i1.symm) at i0
-      have two_lt : (2 : ℕ) < ↑i := by
-        exact Nat.lt_of_le_of_ne i0 i2.symm
-      have : ↑i ≤ 3 := by
-        exact Fin.succ_le_succ_iff.mp this
-      exact Nat.le_antisymm this two_lt
-    simp [i3, hj]
-    congr
+    }
 
 lemma tens_self (φ : Qubit) :
   let α := φ 0 0
@@ -282,7 +288,7 @@ lemma ket0_tens_ket0 :
     rw [qubit_tens_qubit, ← Matrix.ext_iff]
     intro i j
     unfold ket0 ket00
-    simp
+    simp only [Fin.isValue, Matrix.of_apply, ↓reduceIte, mul_one, one_ne_zero, mul_zero, ite_self]
 
 @[simp]
 lemma ket0_tens_ket1 :
@@ -291,7 +297,7 @@ lemma ket0_tens_ket1 :
     rw [qubit_tens_qubit, ← Matrix.ext_iff]
     intro i j
     unfold ket0 ket1 ket01
-    simp
+    simp only [Fin.isValue, Matrix.of_apply, ↓reduceIte, zero_ne_one, mul_zero, mul_one, one_ne_zero, ite_self, ite_eq_right_iff]
     intro i'
     rw [if_neg]
     norm_num [i']
@@ -303,8 +309,8 @@ lemma ket1_tens_ket0 :
     rw [qubit_tens_qubit, ← Matrix.ext_iff]
     intro i j
     unfold ket0 ket1 ket10
-    simp
-    by_cases hi : i = 2 <;> simp [hi]
+    simp only [Fin.isValue, Matrix.of_apply, zero_ne_one, ↓reduceIte, mul_one, one_ne_zero, mul_zero]
+    by_cases hi : i = 2 <;> simp only [hi, Fin.isValue, Fin.reduceEq, ↓reduceIte, ite_self]
 
 @[simp]
 lemma ket1_tens_ket1 :
@@ -313,7 +319,7 @@ lemma ket1_tens_ket1 :
     rw [qubit_tens_qubit, ← Matrix.ext_iff]
     unfold ket1 ket11
     simp only [Fin.isValue, zero_ne_one, ↓reduceIte, mul_zero, mul_one, Matrix.of_apply]
-    apply Fin.bash4 <;> simp [*]
+    apply Fin.bash4 <;> simp only [Fin.isValue, ↓reduceIte, Fin.reduceEq, one_ne_zero]
 
 
 /-
@@ -339,7 +345,7 @@ lemma CNOT_mul_ket0_tens {φ : Qubit} :
       I₂,
       Matrix.one_mul,
     ]
-    simp
+    simp only [tens, Matrix.of_apply, Fin.isValue, ite_mul, one_mul, zero_mul, add_zero]
 
 @[simp]
 lemma CNOT_mul_ket1_tens {φ : Qubit} :
@@ -358,7 +364,7 @@ lemma CNOT_mul_ket1_tens {φ : Qubit} :
       Matrix.mul_zero,
       zero_tens,
     ]
-    simp
+    simp only [tens, Matrix.of_apply, Fin.isValue, ite_mul, one_mul, zero_mul, zero_add]
 
 -- TODO: The proofs of these lemmas are basically copies of the above ones. Figure out a better way of proving them.
 
@@ -381,7 +387,7 @@ lemma CNOT'_mul_tens_ket0 {φ : Qubit} :
       I₂,
       Matrix.one_mul,
     ]
-    simp
+    simp only [tens, Matrix.of_apply, Fin.isValue, mul_ite, mul_one, mul_zero, add_zero]
 
 @[simp]
 lemma CNOT'_mul_tens_ket1 {φ : Qubit} :
@@ -400,7 +406,7 @@ lemma CNOT'_mul_tens_ket1 {φ : Qubit} :
       Matrix.mul_zero,
       tens_zero,
     ]
-    simp
+    simp only [tens, Matrix.of_apply, Fin.isValue, mul_ite, mul_one, mul_zero, zero_add]
 
 
 /-
@@ -415,7 +421,8 @@ lemma X_mul_ket0 :
     apply Matrix.ext
     apply Fin.bash2 <;> {
       rw [Matrix.mul_apply]
-      simp
+      simp only [Fin.isValue, Matrix.of_apply, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq',
+        Finset.mem_univ, ↓reduceIte, zero_ne_one, one_ne_zero]
     }
 
 @[simp]
@@ -426,7 +433,7 @@ lemma X_mul_ket1 :
     apply Matrix.ext
     apply Fin.bash2 <;> {
       rw [Matrix.mul_apply]
-      simp
+      simp only [Fin.isValue, Matrix.of_apply, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, ↓reduceIte, zero_ne_one, one_ne_zero]
     }
 
 lemma X_mul_qubit' {α β : ℂ} :
@@ -453,7 +460,8 @@ lemma Z_mul_ket0 :
     apply Matrix.ext
     apply Fin.bash2 <;> {
       rw [Matrix.mul_apply]
-      simp
+      simp only [Fin.isValue, one_ne_zero, ↓reduceIte, Matrix.of_apply, mul_ite, mul_one, mul_zero,
+        Finset.sum_ite_eq', Finset.mem_univ]
     }
 
 @[simp]
@@ -464,7 +472,7 @@ lemma Z_mul_ket1 :
     apply Matrix.ext
     apply Fin.bash2 <;> {
       rw [Matrix.mul_apply]
-      simp
+      simp only [Fin.isValue, ↓reduceIte, Matrix.of_apply, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, zero_ne_one, one_ne_zero, Matrix.neg_apply, neg_zero]
     }
 
 lemma Z_mul_qubit' {α β : ℂ} :
@@ -493,7 +501,7 @@ lemma H_mul_ket0 :
     apply Matrix.ext
     intro i j
     rw [Matrix.mul_apply]
-    simp
+    simp only [Fin.isValue, Matrix.of_apply, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, ↓reduceIte, or_true]
 
 @[simp]
 lemma H_mul_ket1 :
@@ -505,7 +513,7 @@ lemma H_mul_ket1 :
     apply Matrix.ext
     intro i j
     rw [Matrix.mul_apply]
-    simp
+    simp only [Fin.isValue, Matrix.of_apply, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, ↓reduceIte, one_ne_zero, or_false]
 
 
 /-
@@ -521,17 +529,17 @@ lemma unitary_tens_unitary {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {
     unfold tens
     apply Matrix.ext
     intro i j
-    simp [Matrix.one_apply, Fin.modNat, Fin.divNat]
+    simp only [Fin.divNat, Matrix.one_apply, Fin.mk.injEq, Fin.modNat, mul_ite, mul_one, mul_zero, Matrix.of_apply]
     by_cases h : i = j
     · rw [if_pos]
-      simp [h]
+      simp only [h, ↓reduceIte]
       exact congrFun (congrArg HMod.hMod (congrArg Fin.val h)) n₂
-    · simp [*]
+    · simp only [↓reduceIte, ite_eq_right_iff, one_ne_zero, imp_false, h]
       intro h'
       contrapose h
       rw [not_not] at h ⊢
       rw [Fin.ext_iff, ← Nat.div_add_mod ↑i n₂, ← Nat.div_add_mod ↑j n₂]
-      simp [*]
+      simp only [h, h']
 
 lemma ket00_unitary :
   |00⟩.unitary
@@ -605,7 +613,7 @@ lemma Z_symm :
 lemma Z_real :
   Z.real
   := by
-    simp [QMatrix.real, Z, Complex.star_def, RingHom.map_ite_zero_one, forall_const]
+    simp only [QMatrix.real, Z, Fin.isValue, Complex.star_def]
     intro i j
     by_cases h : i = j
     · simp only [h, ↓reduceIte, Fin.isValue, apply_ite, map_one, map_neg, ite_eq_left_iff, neg_eq_self_iff, one_ne_zero, imp_false, not_not, ite_eq_right_iff, eq_neg_self_iff, if_then_self_else_not_self]
@@ -619,7 +627,7 @@ lemma Z_hermitian :
 lemma proj_hermitian {m n : ℕ} {M : QMatrix m n} :
   QSquare.hermitian (M * M†)
   := by
-    simp
+    simp only [QSquare.hermitian, adjoint_mul, double_adjoint]
 
 
 /-

@@ -50,7 +50,23 @@ theorem no_cloning :
           ket1_tens_ket1,
         ]
         apply Matrix.ext
-        apply Fin.bash4 <;> simp [ket00, ket11, second_expansion]
+        apply Fin.bash4 <;> simp only [
+          Fin.isValue,
+          Matrix.add_apply,
+          Matrix.smul_apply,
+          ket00,
+          one_ne_zero,
+          zero_ne_one,
+          ↓reduceIte,
+          smul_eq_mul,
+          mul_one,
+          ket11,
+          Fin.reduceEq,
+          mul_zero,
+          add_zero,
+          zero_add,
+          second_expansion,
+        ]
     have first_eq_second (φ : Qubit) (hφ : |φ| = 1) :
       first_expansion φ = second_expansion φ
       := calc
@@ -60,4 +76,24 @@ theorem no_cloning :
     unfold_let first_expansion second_expansion at first_eq_second
     apply Matrix.ext_iff.mpr at first_eq_second
     specialize first_eq_second 1 0
-    simp [ket_plus, Qubit.α, Qubit.β] at first_eq_second
+    simp only [
+      Fin.isValue,
+      one_ne_zero,
+      ↓reduceIte,
+      Qubit.α,
+      ket_plus,
+      Complex.ofReal_eq_coe,
+      one_div,
+      Matrix.smul_apply,
+      Matrix.of_apply,
+      smul_eq_mul,
+      mul_one,
+      Qubit.β,
+      mul_eq_zero,
+      inv_eq_zero,
+      Complex.ofReal_eq_zero,
+      Nat.ofNat_nonneg,
+      Real.sqrt_eq_zero,
+      OfNat.ofNat_ne_zero,
+      or_self,
+    ] at first_eq_second

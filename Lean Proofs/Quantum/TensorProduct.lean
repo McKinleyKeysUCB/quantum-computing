@@ -10,7 +10,7 @@ lemma tens_add {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix 
     apply Matrix.ext
     intro i j
     rw [Matrix.add_apply, tens, tens, tens]
-    simp
+    simp only [Matrix.add_apply, Matrix.of_apply]
     rw [mul_add]
 
 @[simp]
@@ -20,7 +20,7 @@ lemma add_tens {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix 
     apply Matrix.ext
     intro i j
     rw [Matrix.add_apply, tens, tens, tens]
-    simp
+    simp only [Matrix.add_apply, Matrix.of_apply]
     rw [add_mul]
 
 @[simp]
@@ -30,7 +30,7 @@ lemma tens_sub {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix 
     apply Matrix.ext
     intro i j
     rw [Matrix.sub_apply, tens, tens, tens]
-    simp
+    simp only [Matrix.sub_apply, Matrix.of_apply]
     rw [mul_sub]
 
 @[simp]
@@ -40,14 +40,14 @@ lemma sub_tens {m₁ n₁ m₂ n₂ : ℕ} {A : QMatrix m₁ n₁} {B : QMatrix 
     apply Matrix.ext
     intro i j
     rw [Matrix.sub_apply, tens, tens, tens]
-    simp
+    simp only [Matrix.sub_apply, Matrix.of_apply]
     rw [sub_mul]
 
 @[simp]
 lemma smul_tens {m₁ n₁ m₂ n₂ : ℕ} {s : ℂ} {A : QMatrix m₁ n₁} {B : QMatrix m₂ n₂} :
   (s • A) ⨂ B = s • (A ⨂ B)
   := by
-    simp [tens, Pi.smul_def]
+    simp only [tens, Matrix.smul_apply, smul_eq_mul, Matrix.smul_of, Pi.smul_def, EmbeddingLike.apply_eq_iff_eq]
     apply funext₂
     intro i j
     ring
@@ -56,11 +56,12 @@ lemma smul_tens {m₁ n₁ m₂ n₂ : ℕ} {s : ℂ} {A : QMatrix m₁ n₁} {B
 lemma tens_smul {m₁ n₁ m₂ n₂ : ℕ} {s : ℂ} {A : QMatrix m₁ n₁} {B : QMatrix m₂ n₂} :
   A ⨂ (s • B) = s • (A ⨂ B)
   := by
-    simp [tens, Pi.smul_def]
+    simp only [tens, Matrix.smul_apply, smul_eq_mul, Matrix.smul_of, Pi.smul_def, EmbeddingLike.apply_eq_iff_eq]
     apply funext₂
     intro i j
     ring
 
+-- Helper lemma for `tens_mul_tens`.
 lemma Finset.sum_Fin_mul {α : Type} [AddCommMonoid α] {a b : ℕ} (f : Fin a → Fin b → α) :
   (∑ x : Fin (a * b), f (Fin.divNat x) (Fin.modNat x)) = (∑ x : Fin a, ∑ y : Fin b, f x y)
   := by
@@ -86,7 +87,7 @@ lemma Finset.sum_Fin_mul {α : Type} [AddCommMonoid α] {a b : ℕ} (f : Fin a �
     simp only [this]
     rw [sum_image]
     intro x _ y _ h
-    simp [g] at h
+    simp only [Prod.mk.injEq, g] at h
     rcases h with ⟨left, right⟩
     exact Fin.eq_of_div_eq_div_and_mod_eq_mod left right
 
@@ -135,7 +136,7 @@ lemma tens_assoc {a b c d e f : ℕ} {A : QMatrix a b} {B : QMatrix c d} {C : QM
   := by
     apply Matrix.ext
     intro i j
-    simp
+    simp only [tens, Matrix.of_apply]
     rw [QMatrix.cast_apply (by ring) (by ring), Matrix.of_apply, mul_assoc]
     congr 1
     · congr 1 <;> exact Fin.div_div_eq_div_cast
@@ -147,14 +148,14 @@ lemma tens_assoc {a b c d e f : ℕ} {A : QMatrix a b} {B : QMatrix c d} {C : QM
 lemma tens_zero {m₁ n₁ m₂ n₂ : ℕ} {M : QMatrix m₁ n₁} :
   M ⨂ (0 : QMatrix m₂ n₂) = 0
   := by
-    simp
+    simp only [tens, Matrix.zero_apply, mul_zero]
     rfl
 
 @[simp]
 lemma zero_tens {m₁ n₁ m₂ n₂ : ℕ} {M : QMatrix m₂ n₂} :
   (0 : QMatrix m₁ n₁) ⨂ M = 0
   := by
-    simp
+    simp only [tens, Matrix.zero_apply, zero_mul]
     rfl
 
 @[simp]
@@ -166,10 +167,10 @@ lemma tens_one {m n : ℕ} {M : QMatrix m n} :
     simp only [tens, Matrix.of_apply]
     have hi : Fin.modNat i = 0 := by
       apply Fin.ext
-      simp
+      simp only [Fin.coe_fin_one, Fin.isValue]
     have hj : Fin.modNat j = 0 := by
       apply Fin.ext
-      simp
+      simp only [Fin.coe_fin_one, Fin.isValue]
     rw [
       hi,
       hj,
@@ -180,7 +181,7 @@ lemma tens_one {m n : ℕ} {M : QMatrix m n} :
       Fin.divNat,
       Fin.divNat,
     ]
-    simp
+    simp only [Nat.div_one]
     congr
 
 @[simp]
@@ -192,10 +193,10 @@ lemma one_tens {m n : ℕ} {M : QMatrix m n} :
     simp only [tens, Matrix.of_apply]
     have hi : Fin.divNat i = 0 := by
       apply Fin.ext
-      simp
+      simp only [Fin.coe_fin_one, Fin.isValue]
     have hj : Fin.divNat j = 0 := by
       apply Fin.ext
-      simp
+      simp only [Fin.coe_fin_one, Fin.isValue]
     rw [
       hi,
       hj,

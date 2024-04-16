@@ -93,7 +93,7 @@ def Fin.div_mod_inv {a b : ℕ} (q : Fin a) (r : Fin b) : Fin (a * b) :=
     have : q + 1 ≤ a := by
       exact hq
     calc
-      _ < b * q + b       := by simp [hr]
+      _ < b * q + b       := by simp only [add_lt_add_iff_left, hr]
       _ = b * (q + 1)     := by ring
       _ ≤ b * a           := Nat.mul_le_mul_left b hq
       _ = a * b           := mul_comm _ _
@@ -109,7 +109,7 @@ lemma Fin.divNat_div_mod_inv {a b : ℕ} {q : Fin a} {r : Fin b} :
     · apply Nat.zero_lt_of_ne_zero at hb
       rw [div_mod_inv, Fin.divNat]
       apply Fin.ext
-      dsimp
+      dsimp only
       rw [
         Nat.div_eq_sub_mod_div,
         Nat.mul_add_mod,
@@ -123,7 +123,7 @@ lemma Fin.modNat_div_mod_inv {a b : ℕ} {q : Fin a} {r : Fin b} :
   := by
     rw [div_mod_inv, Fin.modNat]
     apply Fin.ext
-    dsimp
+    dsimp only
     rw [
       Nat.add_mod,
       Nat.mul_mod_right,
@@ -135,8 +135,8 @@ lemma Fin.modNat_div_mod_inv {a b : ℕ} {q : Fin a} {r : Fin b} :
 lemma Fin.eq_of_div_eq_div_and_mod_eq_mod {a b : ℕ} {x y : Fin (a * b)} (hdiv : x.divNat = y.divNat) (hmod : x.modNat = y.modNat) :
   x = y
   := by
-    simp [Fin.divNat] at hdiv
-    simp [Fin.modNat] at hmod
+    simp only [divNat, mk.injEq] at hdiv
+    simp only [modNat, mk.injEq] at hmod
     apply Fin.ext
     rw [← Nat.div_add_mod ↑x b, ← Nat.div_add_mod ↑y b, hdiv, hmod]
 
@@ -144,21 +144,21 @@ lemma Fin.div_div_eq_div_cast {a b c : ℕ} {i : Fin (a * b * c)} {h : (a * b * 
   Fin.divNat (Fin.divNat i) = Fin.divNat (Fin.cast h i)
   := by
     unfold divNat
-    simp
+    simp only [coe_cast, mk.injEq]
     rw [Nat.div_div_eq_div_mul, mul_comm c b]
 
 lemma Fin.mod_div_eq_div_mod_cast {a b c : ℕ} {i : Fin (a * b * c)} {h : (a * b * c) = (a * (b * c))} :
   Fin.modNat (Fin.divNat i) = Fin.divNat (Fin.modNat (Fin.cast h i))
   := by
     unfold divNat modNat
-    simp
+    simp only [coe_cast, mk.injEq]
     rw [Nat.mod_mul_left_div_self]
 
 lemma Fin.mod_eq_mod_mod_cast {a b c : ℕ} {i : Fin (a * b * c)} {h : (a * b * c) = (a * (b * c))} :
   Fin.modNat i = Fin.modNat (Fin.modNat (Fin.cast h i))
   := by
     unfold modNat
-    simp
+    simp only [coe_cast, Nat.mod_mul_left_mod]
 
 
 /-
@@ -180,7 +180,7 @@ lemma cast_apply_eq_apply {α α' β β' γ : Type} {f : α → β → γ} {a : 
 lemma if_true_false {p : Bool} :
   (if p then true else false) = p
   := by
-    by_cases h : p <;> simp [h]
+    by_cases h : p <;> simp only [h, ↓reduceIte]
 
 lemma if_then_self_else_not_self {P : Prop} [Decidable P] :
   if P then P else ¬P
@@ -235,7 +235,25 @@ lemma one_div_sqrt_half_mul_half :
   ↑(1 / Real.sqrt (1 / 2)) * (1 / 2) = 1 / Complex.ofReal (Real.sqrt 2)
   := by
     rw [Complex.ofReal_eq_coe, Complex.div_ofReal, Complex.ofReal_mul']
-    simp
+    simp only [
+      one_div,
+      Real.sqrt_inv,
+      div_inv_eq_mul,
+      one_mul,
+      Complex.inv_re,
+      Complex.re_ofNat,
+      Complex.normSq_ofNat,
+      div_self_mul_self',
+      Complex.inv_im,
+      Complex.im_ofNat,
+      neg_zero,
+      zero_div,
+      mul_zero,
+      Complex.one_re,
+      Complex.one_im,
+      Complex.mk.injEq,
+      and_true,
+    ]
     rw [← division_def, Real.sqrt_div_self]
 
 lemma one_div_sqrt_half_mul_one_div_sqrt_two :

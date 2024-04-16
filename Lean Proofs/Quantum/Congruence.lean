@@ -21,7 +21,7 @@ instance {a b : QVector n} : Decidable (a ≡ b) := by
     by_cases hb : b = 0
     · apply Decidable.isTrue
       use 1
-      simp [ha, hb]
+      simp only [map_one, ha, smul_zero, hb, and_self]
     · apply Decidable.isFalse
       unfold QVector.congruent
       rw [not_exists]
@@ -29,7 +29,7 @@ instance {a b : QVector n} : Decidable (a ≡ b) := by
       rw [not_and]
       intro
       rw [ha]
-      simp [*, Eq.comm]
+      simp only [smul_zero, Eq.comm, not_false_eq_true, hb]
   | some i =>
     have hi : a i 0 ≠ 0 := by
       change P i
@@ -95,7 +95,7 @@ lemma cong_symm {n : ℕ} {a b : QVector n} :
     intro ⟨c, ⟨hc, h⟩⟩
     use star c
     constructor
-    · simp [hc]
+    · simp only [Complex.star_def, Complex.normSq_conj, hc]
     · rw [
         ← h,
         smul_smul,
@@ -103,7 +103,7 @@ lemma cong_symm {n : ℕ} {a b : QVector n} :
         ← Complex.normSq_eq_conj_mul_self,
         hc,
       ]
-      simp
+      simp only [Complex.ofReal_one, one_smul]
 
 lemma cong_comm {n : ℕ} {a b : QVector n} :
   (a ≡ b) ↔ (b ≡ a)
@@ -150,7 +150,7 @@ lemma ncong_smul_of_ncong {n : ℕ} {a b : QVector n} {c : ℂ} (hc : Complex.no
     apply h
     use c' / c
     constructor
-    · simp [hc', hc]
+    · simp only [map_div₀, hc', hc, ne_eq, one_ne_zero, not_false_eq_true, div_self]
     · rw [division_def, mul_comm, mul_smul, h', ← mul_smul]
       have hc : c ≠ 0 := by
         contrapose hc
@@ -162,9 +162,7 @@ lemma ncong_smul_of_ncong {n : ℕ} {a b : QVector n} {c : ℂ} (hc : Complex.no
 lemma ket0_ncong_ket1 :
   |0⟩ ≢ |1⟩
   := by
-    apply ncong_of_eq_zero_of_ne_zero 1
-    · simp [ket0]
-    · simp [ket1]
+    apply ncong_of_eq_zero_of_ne_zero 1 <;> simp only [ket0, ket1, Fin.isValue, Matrix.of_apply, ↓reduceIte, ne_eq, one_ne_zero, not_false_eq_true]
 
 lemma cong_smul_self {n : ℕ} {φ : QVector n} {c : ℂ} (hc : Complex.normSq c = 1):
   φ ≡ c • φ
