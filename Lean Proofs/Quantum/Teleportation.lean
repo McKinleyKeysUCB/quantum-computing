@@ -1,54 +1,48 @@
 
 import Quantum.Basic
 
-/-
- - The proofs in this file are so long that my Lean client times out when verifying them. We have to increase the max heartbeats so that Lean won't time out.
- -/
+-- The proofs in this file are so long that my Lean client times out when verifying them. We have to increase the max heartbeats so that Lean won't time out.
 set_option maxHeartbeats 500000
+
+
+/-
+ - Helper Definitions
+ -/
 
 def CNOT₂₁ := I₂ ⨂ CNOT'
 def CNOT₀₁ := CNOT ⨂ I₂
 
+/-- Measures the 0-th qubit in a state of 3 qubits. Uses the `Random` monad. -/
 noncomputable
-def Qmeasure₀ := Qmeasure₃₀
-noncomputable
-def Qmeasure₁ := Qmeasure₃₁
-noncomputable
-def Qmeasure₀_rng := Qmeasure₃₀_rng
-noncomputable
-def Qmeasure₁_rng := Qmeasure₃₁_rng
+def Qmeasure₀ (φ : Qubits 3) : Random (Bool × Qubits 3) :=
+  Qmeasure_qubit φ (|0⟩⟨0| ⨂ I₂ ⨂ I₂) (|1⟩⟨1| ⨂ I₂ ⨂ I₂)
 
+/-- Measures the 1-th qubit in a state of 3 qubits. Uses the `Random` monad. -/
+noncomputable
+def Qmeasure₁ (φ : Qubits 3) : Random (Bool × Qubits 3) :=
+  Qmeasure_qubit φ (I₂ ⨂ |0⟩⟨0| ⨂ I₂) (I₂ ⨂ |1⟩⟨1| ⨂ I₂)
+
+/-- Measures the 0-th qubit in a state of 3 qubits. Uses `RNG`-based randomness. -/
+noncomputable
+def Qmeasure₀_rng (φ : Qubits 3) (rng : RNG) : (Bool × Qubits 3) × RNG :=
+  Qmeasure_qubit_rng φ (|0⟩⟨0| ⨂ I₂ ⨂ I₂) (|1⟩⟨1| ⨂ I₂ ⨂ I₂) rng
+
+/-- Measures the 1-th qubit in a state of 3 qubits. Uses `RNG`-based randomness. -/
+noncomputable
+def Qmeasure₁_rng (φ : Qubits 3) (rng : RNG) : (Bool × Qubits 3) × RNG :=
+  Qmeasure_qubit_rng φ (I₂ ⨂ |0⟩⟨0| ⨂ I₂) (I₂ ⨂ |1⟩⟨1| ⨂ I₂) rng
+
+/-- Extracts the 2-th qubit from a state of 3 qubits. -/
 def extract₂ (state : Qubits 3) : Qubit :=
   ((⟨00| + ⟨01| + ⟨10| + ⟨11|) ⨂ I₂) * state
 
-def entangle :
-  CNOT' * (I₂ ⨂ H) * |00⟩ = |Φ+⟩
-  := by
-    sorry
-def entangle' :
-  CNOT * (H ⨂ I₂) * |00⟩ = |Φ+⟩
-  := by
-    rw [
-      Matrix.mul_assoc,
-      ← ket0_tens_ket0,
-      tens_mul_tens,
-      H_mul_ket0,
-      I₂,
-      Matrix.one_mul,
-      ket_plus_eq_ket0_plus_ket1,
-      smul_tens,
-      add_tens,
-      Matrix.mul_smul,
-      Matrix.mul_add,
-      CNOT_mul_ket0_tens,
-      CNOT_mul_ket1_tens,
-      X_mul_ket0,
-      ket0_tens_ket0,
-      ket1_tens_ket1,
-    ]
 
+/-
+ - An implementation of quantum teleportation using the `Random` monad.
+ -/
+ 
 noncomputable
-def teleport_random (φ : Qubit) : Random Qubit := do
+def teleport (φ : Qubit) : Random Qubit := do
   let state₀ := φ ⨂ |00⟩
   let state₁ := CNOT₂₁ * (I₂ ⨂ I₂ ⨂ H) * state₀
   let state₂ := (H ⨂ I₂ ⨂ I₂) * CNOT₀₁ * state₁
@@ -61,17 +55,28 @@ def teleport_random (φ : Qubit) : Random Qubit := do
     result := Z * result
   pure result
 
+
+/-
+ - An implementation of quantum teleportation using `RNG`-based randomness.
+ -/
+
+/-- The return type of `teleport_rng`. `φ` is Alice's qubit. -/
 structure TeleportRNGResult (φ : Qubit) where
+  /-- Bob's qubit, after teleportation. -/
   ψ : Qubit
+  /-- A proof that Bob's qubit is the same as Alice's original qubit. -/
   hφ : ψ = φ
+  /-- The random number generator. -/
   rng : RNG
 
 noncomputable
-def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
-  TeleportRNGResult φ :=
+def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) : TeleportRNGResult φ :=
+  
   let α := φ.α
   let β := φ.β
+  
   let state₀ := φ ⨂ |00⟩
+  
   let state₁ := CNOT₂₁ * (I₂ ⨂ I₂ ⨂ H) * state₀
   have : state₁ = φ ⨂ |Φ+⟩ := by
     unfold_let state₁ state₀
@@ -86,8 +91,9 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
       tens_mul_tens,
       Matrix.one_mul,
       ← I₂,
-      entangle,
+      entangle_ket00',
     ]
+  
   let state₂ := (H ⨂ I₂ ⨂ I₂) * CNOT₀₁ * state₁
   have : state₂ = (1/2 : ℂ) • (
     |00⟩ ⨂ (α•|0⟩ + β•|1⟩) +
@@ -164,21 +170,13 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
         tens_mul_tens,
         H_mul_ket1,
       ]
-    rw [
-      I₂,
-      Matrix.one_mul,
-      Matrix.one_mul,
-      Matrix.one_mul,
-      Matrix.one_mul,
-      Matrix.one_mul,
-      ket_plus_eq_ket0_plus_ket1,
-      ket_minus_eq_ket0_minus_ket1,
-    ]
+    rw [I₂]
+    repeat rw [Matrix.one_mul]
+    rw [ket_plus_eq_ket0_plus_ket1, ket_minus_eq_ket0_minus_ket1]
     conv =>
       lhs
       rw [smul_add]
-      args
-      {
+      args <;> {
         arg 2
         rw [
           smul_tens,
@@ -188,20 +186,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
           ← smul_add,
         ]
       }
-      {
-        arg 2
-        rw [
-          smul_tens,
-          smul_comm (m := α),
-          smul_tens,
-          smul_comm (m := β),
-          ← smul_add,
-        ]
-      }
-    rw [
-      ← smul_tens,
-      smul_smul,
-    ]
+    rw [← smul_tens, smul_smul]
     nth_rw 3 [← smul_tens]
     rw [
       smul_smul,
@@ -209,26 +194,13 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
       smul_tens,
       ← smul_add,
       one_div_sqrt_two_sq,
-      add_tens,
-      smul_tens,
-      ← tens_smul,
-      smul_tens,
-      ← tens_smul,
+      add_tens
     ]
+    repeat rw [smul_tens, ← tens_smul]
     nth_rw 2 [add_tens]
+    repeat rw [smul_tens, ← tens_smul]
+    repeat rw [add_tens, sub_tens]
     rw [
-      smul_tens,
-      ← tens_smul,
-      smul_tens,
-      ← tens_smul,
-      add_tens,
-      add_tens,
-      sub_tens,
-      sub_tens,
-      add_tens,
-      add_tens,
-      sub_tens,
-      sub_tens,
       ket0_tens_ket0,
       ket0_tens_ket1,
       ket1_tens_ket0,
@@ -271,20 +243,10 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
         add_sub_assoc,
         add_sub_assoc,
         add_left_comm,
-        add_sub_assoc,
-        add_sub_assoc,
-        add_sub_assoc,
-        add_sub_assoc,
       ]
+      repeat rw [add_sub_assoc]
     congr 2
-    conv =>
-      rhs
-      rw [
-        ← add_sub_right_comm,
-        ← add_sub_right_comm,
-        add_sub_assoc,
-        add_sub_assoc,
-      ]
+    simp only [← add_sub_right_comm, add_sub_assoc]
   
   
   /-
@@ -354,7 +316,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
       norm_num
   have ha : a = (rng.flip (1/2)).1 := by
     unfold_let a first_measurement
-    unfold Qmeasure₀_rng Qmeasure₃₀_rng Qmeasure_single_qubit_rng
+    unfold Qmeasure₀_rng Qmeasure_qubit_rng
     simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
     simp only [apply_ite Prod.fst, apply_ite Prod.snd]
     rw [if_true_false]
@@ -366,7 +328,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
   := by
     unfold_let state₃
     unfold_let first_measurement at a ⊢
-    unfold Qmeasure₀_rng Qmeasure₃₀_rng Qmeasure_single_qubit_rng
+    unfold Qmeasure₀_rng Qmeasure_qubit_rng
     simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
     simp only [apply_ite Prod.fst, apply_ite Prod.snd]
     rw [← ha]
@@ -392,12 +354,6 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
   
   let proj0 := (I₂ ⨂ |0⟩⟨0| ⨂ I₂) * state₃
   let proj1 := (I₂ ⨂ |1⟩⟨1| ⨂ I₂) * state₃
-  /-
-    if a then
-      (1/√2) • (|10⟩ ⨂ (α•|0⟩ - β•|1⟩) + |11⟩ ⨂ (-β•|0⟩ + α•|1⟩))
-    else
-      (1/√2) • (|00⟩ ⨂ (α•|0⟩ + β•|1⟩) + |01⟩ ⨂ (β•|0⟩ + α•|1⟩))
-   -/
   have hproj0 :
     proj0 =
       if a then
@@ -469,7 +425,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
       }
   have hb : b = (rng₁.flip (1/2)).1 := by
     unfold_let b second_measurement
-    unfold Qmeasure₁_rng Qmeasure₃₁_rng Qmeasure_single_qubit_rng
+    unfold Qmeasure₁_rng Qmeasure_qubit_rng
     simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
     simp only [apply_ite Prod.fst, apply_ite Prod.snd]
     rw [if_true_false]
@@ -487,7 +443,7 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
   := by
     unfold_let state₄
     unfold_let second_measurement at b ⊢
-    unfold Qmeasure₁_rng Qmeasure₃₁_rng Qmeasure_single_qubit_rng
+    unfold Qmeasure₁_rng Qmeasure_qubit_rng
     simp only [proj0, proj0_half_unitary, proj1, proj1_half_unitary]
     simp only [apply_ite Prod.fst, apply_ite Prod.snd]
     rw [← hb]
@@ -582,42 +538,3 @@ def teleport_rng (φ : Qubit) (hφ : φ.unitary) (rng : RNG) :
     rw [← decompose_qubit_into_Z_basis φ]
   
   ⟨ψ, hψ, rng₂⟩
-
--- def mymul (a b : ℕ) := a * b
--- def myadd (a b : ℕ) := a + b
--- 
--- def blah (n : ℕ) :=
---   let a := mymul n 2
---   let b := myadd a 1
---   myadd a b
-
--- example {n : ℕ} :
---   blah n = myadd (mymul 4 n) 1
---   := by
---     unfold blah
---     rw?
-    
-    -- sorry
-    -- conv =>
-    --   lhs
-    --   intro a b
-    
-    -- show 1 + 1 = 2
-    -- sorry
-
-theorem quantum_teleportation {φ : Qubit} :
-  ℙ[teleport_random φ = φ] = 1
-  := by
-    unfold teleport_random probability_equals does_equal
-    -- simp [Qmeasure₀, I₂, X, Z, CNOT₀₁, CNOT₂₁]
-    
-    conv =>
-      lhs
-      arg 0
-      -- intro state₀
-    
-      -- arg 0
-      -- intro state₀
-      -- intro state₁
-      -- intro state₂
-    sorry
