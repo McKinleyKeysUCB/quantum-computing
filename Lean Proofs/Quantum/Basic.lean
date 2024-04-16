@@ -606,6 +606,44 @@ lemma CNOT_mul_ket1_tens {φ : Qubit} :
       zero_tens,
     ]
     simp
+@[simp]
+lemma CNOT'_mul_tens_ket0 {φ : Qubit} :
+  CNOT' * (φ ⨂ |0⟩) = φ ⨂ |0⟩
+  := by
+    unfold CNOT'
+    rw [
+      Matrix.add_mul,
+      tens_mul_tens,
+      tens_mul_tens,
+      Matrix.mul_assoc,
+      ket0_unitary,
+      Matrix.mul_assoc,
+      bra1_mul_ket0,
+      Matrix.mul_one,
+      Matrix.mul_zero,
+      tens_zero,
+      I₂,
+      Matrix.one_mul,
+    ]
+    simp
+@[simp]
+lemma CNOT'_mul_tens_ket1 {φ : Qubit} :
+  CNOT' * (φ ⨂ |1⟩) = (X * φ) ⨂ |1⟩
+  := by
+    unfold CNOT'
+    rw [
+      Matrix.add_mul,
+      tens_mul_tens,
+      tens_mul_tens,
+      Matrix.mul_assoc,
+      Matrix.mul_assoc,
+      ket1_unitary,
+      bra0_mul_ket1,
+      Matrix.mul_one,
+      Matrix.mul_zero,
+      tens_zero,
+    ]
+    simp
 
 
 /-
