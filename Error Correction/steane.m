@@ -1,4 +1,13 @@
 
+% This file contains an implementation of the Steane code
+% in MATLAB. It will run many test cases, and in each one,
+% it will generate a random qubit, encode it using the
+% Steane code, apply all possible single-qubit X and Z
+% errors, and check that the Steane code can successfully
+% correct each one.
+% 
+% To see it in action, simply run the whole file in MATLAB.
+
 close all;
 clear all;
 clc;
