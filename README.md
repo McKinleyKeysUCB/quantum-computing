@@ -11,7 +11,7 @@ Group members:
 
 This project has three parts:
 - `Lean Proofs`: proofs of quantum computing theorems written in the Lean theorem prover.
-- TODO: MATLAB stuff
+- `Error Correction`: MATLAB implementations of the Shor 9-qubit code and the Steane code.
 - `Shor's Algorithm`: a Python program that verifies the accuracy of Shor's algorithm for reasonably small `N`.
 
 
